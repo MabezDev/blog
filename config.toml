@@ -40,7 +40,6 @@ hermit_menu = [
 hermit_social = [
     { name = "linkedin", link = "https://www.linkedin.com/in/scott-mabin" },
     { name = "github", link = "https://github.com/mabezdev" },
-    # { name = "email", link = "mailto:scott@mabez.dev" }
 ]
 
 [extra.author]
@@ -48,5 +47,5 @@ name = "Scott Mabin"
 email = "scott@mabez.dev"
 
 [extra.google_analytics]
-enable = false
-id = "UA-4XXXXXXX-X"
+enable = true
+id = "UA-146726046-1"
