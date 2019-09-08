@@ -8,7 +8,7 @@ tags=["rust", "esp32", "llvm"]
 
 About six months ago, I made a [post on reddit](https://www.reddit.com/r/rust/comments/ar2d3r/espressif_have_finally_released_an_llvm_fork_this/) highlighting the launch of Espressif's llvm xtensa fork. I quickly got to bootstrapping the compiler and soon it was possible to generate valid xtensa binaries with Rust! Shortly after I had to put this on hold as I finished my final year of university, in which I used Rust in my dissertation, an embedded ['smartwatch'](https://github.com/MWatch) (I may write about this in the future if anyone is interested).
 
-Since then I have seen a few posts utilising my fork to use Rust on the [ESP32](https://www.espressif.com/en/products/hardware/esp32/overview) ([see this great write up](https://dentrassi.de/2019/06/16/rust-on-the-esp-and-how-to-get-started/) by ctron, if you haven't already), most of which are building on top of esp-idf which is written in C. Today I'll be discussing the steps I took to generate valid binaries for the xtensa architecture with `rustc` and then write some `no_std` code to build a blinky program for the ESP32 only using Rust.
+Since then I have seen a few posts utilising my fork to run Rust on the [ESP32](https://www.espressif.com/en/products/hardware/esp32/overview) ([see this great write up](https://dentrassi.de/2019/06/16/rust-on-the-esp-and-how-to-get-started/) by ctron, if you haven't already), most of which are building on top of esp-idf which is written in C. Today I'll be discussing the steps I took to generate valid binaries for the xtensa architecture with `rustc` and then write some `no_std` code to build a blinky program for the ESP32 only using Rust!
 
 ## Hacking the compiler
 
@@ -144,7 +144,7 @@ After flashing to the board, and firing up our JTAG debugger[^1], we are greeted
 
 The full source can be found in the [the xtensa quickstart repo](https://github.com/MabezDev/xtensa-rust-quickstart) if you wish to try it for yourself.
 
-Now I know what most of you are thinking at this point, it's not very Rusty; it contains bundles of unsafe and there are no real abstractions here but it's something to get the ball rolling.
+Now I know what most of you are thinking at this point, it's not very Rusty; it contains bundles of unsafe and there are no real abstractions here, and you are right; but it's something to get the ball rolling.
 
 ## Limitations
 
@@ -158,8 +158,14 @@ Once the debuginfo issue is sorted, I hope to start developing an ecosystem of H
 
 - [xtensa-quickstart](https://github.com/MabezDev/xtensa-rust-quickstart) - A quickstart project for using Rust on xtensa
 - [rust-xtensa](https://github.com/MabezDev/rust-xtensa) - The xtensa fork of Rust
+- [github](https://github.com/MabezDev) - My github
 
+<br/>
 
-[^1]: This step is actually very important, currently the board will reset endlessly on boot (I assume due to the watch dog not being disabled), but launching with the debugger works as expected.
+---
+
+<br/>
 
 [^2]: This is not always the case if the pin the LED is connected to does not default to the correct iomux function, see the quickstart example for more info.
+
+[^1]: This step is actually very important, currently the board will reset endlessly on boot (I assume due to the watch dog not being disabled), but launching with the debugger works as expected.
