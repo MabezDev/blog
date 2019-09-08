@@ -12,7 +12,8 @@ highlight_code = true
 
 # Which theme to use for the code highlighting.
 # See below for list of accepted values
-highlight_theme = "agola-dark"
+#highlight_theme = "monokai"
+highlight_theme = "base16-ocean-dark"
 
 # Whether to generate a RSS feed automatically
 generate_rss = true
