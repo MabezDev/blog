@@ -1,24 +1,24 @@
 +++
 title="Rust on the ESP32"
-date=2019-08-28
+date=2019-09-10
 draft=false
 [taxonomies]
 tags=["rust", "esp32", "llvm"]
 +++
 
-About six months ago, I made a [post on reddit](https://www.reddit.com/r/rust/comments/ar2d3r/espressif_have_finally_released_an_llvm_fork_this/) highlighting the launch of Espressif's llvm xtensa fork. I quickly got to bootstrapping the compiler and soon it was possible to generate valid xtensa binaries with Rust! Shortly after I had to put this on hold as I finished my final year of university, in which I used Rust in my dissertation, an embedded ['smartwatch'](https://github.com/MWatch) (I may write about this in the future if anyone is interested).
+About six months ago, I made a [post on reddit](https://www.reddit.com/r/rust/comments/ar2d3r/espressif_have_finally_released_an_llvm_fork_this/) highlighting the launch of Espressif's llvm xtensa fork, not too long after, I had a working `rustc` toolchain capable of generating xtensa assembly. At this point I had to put this project to the side to finish my final year of university. Funnily enough I didn't stray too far, my final year project used Rust to create a ['smartwatch'](https://github.com/MWatch) (I may write about this in the future, if anyone is interested). 
 
-Since then I have seen a few posts utilising my fork to run Rust on the [ESP32](https://www.espressif.com/en/products/hardware/esp32/overview) ([see this great write up](https://dentrassi.de/2019/06/16/rust-on-the-esp-and-how-to-get-started/) by ctron, if you haven't already), most of which are building on top of esp-idf which is written in C. Today I'll be discussing the steps I took to generate valid binaries for the xtensa architecture with `rustc` and then write some `no_std` code to build a blinky program for the ESP32 only using Rust!
+Since then I have seen a few posts utilising my fork to run Rust on the [ESP32](https://www.espressif.com/en/products/hardware/esp32/overview) ([see this great write up](https://dentrassi.de/2019/06/16/rust-on-the-esp-and-how-to-get-started/) by ctron, if you haven't already), most of which are building on top of [esp-idf](https://github.com/espressif/esp-idf) which is written in C. In this post I'll be discussing the steps I took to generate valid binaries for the xtensa architecture with `rustc` and then write some `no_std` code to build a blinky program for the ESP32 only using Rust!
 
 ## Hacking the compiler
 
-In March of 2019, Espressif released their first run at an [llvm fork](https://github.com/espressif/llvm-xtensa) to support the xtensa architecure. Shortly after I got to work bootstrapping Rust to use this newly created fork. Now prior to this I'd had no experience with the compiler, fortunately I came across the [RISCV PR](https://github.com/rust-lang/rust/pull/52787) which gave me a rough idea of what was required. Fairly soon after that I was able to generate xtensa assembly from Rust!
+In March of 2019, Espressif released their first run at an [llvm fork](https://github.com/espressif/llvm-xtensa) to support the xtensa architecure. Shortly after I got to work bootstrapping Rust to use this newly created fork. Prior to this project, I'd had no experience with the compiler, fortunately I came across the [RISCV PR](https://github.com/rust-lang/rust/pull/52787) which gave me a rough idea of what was required. After *many* build attempts I finally got it working; I was now able to generate xtensa assembly from Rust source code!
 
-The next step was to assemble and link the generated assembly; the llvm fork in it's current state cannot perform object generation, so we must use an external assembler. Luckily Rust allows us to do so by specifying the `linker_flavor` as `gcc` and providing a path to the linker with the `linker` target option, in this case `xtensa-esp32-elf-gcc`. I was now able to create static binaries capable of running on xtensa cpu's, woohoo.
+The next step was to assemble and link the generated assembly. The llvm fork in it's current state cannot perform object generation, so we must use an external assembler. Luckily Rust allows us to do so by specifying the `linker_flavor` as `gcc` and providing a path to the linker with the `linker` target option, in this case `xtensa-esp32-elf-gcc`. After that I created a few built-in targets (which you can see [here](https://github.com/MabezDev/rust-xtensa/blob/ad570c5cb999f62a03156286fdb5d3d1bbd0fb8b/src/librustc_target/spec/xtensa_esp32_none_elf.rs)); `xtensa-esp32-none-elf` for the ESP32; `xtensa-esp8266-none-elf` for the ESP8266; finally the `xtensa-unknown-none-elf` target for a generic xtensa target.
 
 ## Blinky code
 
-Now lets try and get a board to blink an LED. First off, we need out basic program structure. `xtensa_lx6_rt` does most of the heavy lifting in this respect, we simply need to define an entry point and the panic handler.
+Now lets try and get a ESP32 board to blink the onboard LED using just Rust. First off, we need our basic program structure. The `xtensa_lx6_rt` crate does most of the heavy lifting in this respect, we simply need to define an entry point and the panic handler. Some of this may look vaguely familiar if you have any experience with `cortex-m` development on Rust, I've tried to mirror the API as best as I can.
 
 ```rust
 #![no_std]
@@ -42,7 +42,7 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 ```
 
-Now lets add some register definitions for the peripherals we want to use. For the blinky program, we will need to control the GPIO peripheral.
+Now lets add some register definitions for the peripherals we want to use. For our blinky program, we will need to control the GPIO peripheral. In the ESP32 (and most modern processors) peripherals are mapped to memory adresses, commonly refered to as memory mapped peripherals. To control a peripheral we simply need to write values to the right addresses in memory, with respect to the reference manual supplied by the chip manufacturer.
 
 ```rust
 /// GPIO output enable reg
@@ -53,18 +53,19 @@ const GPIO_OUT_W1TS_REG: u32 = 0x3FF44008;
 /// GPIO output clear register
 const GPIO_OUT_W1TC_REG : u32 = 0x3FF4400C;
 
-const BLINKY_GPIO: u32 = 2; // the GPIO hooked up to the onboard LED
+/// The GPIO hooked up to the onboard LED
+const BLINKY_GPIO: u32 = 2;
 
 /// GPIO function mode
 const GPIO_FUNCX_OUT_BASE: u32 = 0x3FF44530;
 const GPIO_FUNCX_OUT_SEL_CFG: u32 = GPIO_FUNCX_OUT_BASE + (BLINKY_GPIO * 4);
 ```
 
-Using these definitions it should be possible to change the gpio for your board (provided its connected to pins 0-32) by changing the `BLINKY_GPIO`; for my board (NODEMCU ESP-32S) it was GPIO2.
+Using these definitions it should be possible to change the gpio for your board[^gpio_pin] by changing the `BLINKY_GPIO`; for my board (NODEMCU ESP-32S) it was GPIO2.
 
 ### Initialisation
 
-Next lets setup the pin as a GPIO output. Firstly, for pins 0-32, its simply a case of setting a bit in the GPIO ouput enable register. Secondly the pin has to be configured in GPIO mode. There are not enough pins for all the possible peripherals in the chip, to combat this each pin can have multiple function modes. In the case of the ESP32, each pin has up to 256 different functions, although not all are mapped. To put the pin in GPIO mode, we simply need to write 256 (0x100) to the function select register. After issuing those two register writes, we should be able to turn on the GPIO by setting the relevant bit inside the GPIO set register[^2].
+Next lets setup the pin as a GPIO output. For the ESP32, this is a two step process[^gpio_pin]. Firstly, its simply a case of setting a bit in the GPIO ouput enable register. Secondly the pin has to be configured in GPIO mode. There are not enough pins for all the possible peripherals in the chip, to combat this each pin can have multiple function modes. In the case of the ESP32, each pin has up to 256 different functions, although not all are mapped. To put the pin in GPIO mode, we need to put in mode 256 (0x100), we do this by writing to the function select register. After issuing those two register writes, we should be able to turn on the GPIO by setting the relevant bit inside the GPIO set register[^2].
 
 ```rust
 #[no_mangle]
@@ -78,7 +79,7 @@ fn main() -> ! {
     }
     // turn on the LED
     unsafe {
-        core::ptr::write_volatile(GPIO_OUT_W1TS_REG as *mut u32, 0x1 << idx);           
+        core::ptr::write_volatile(GPIO_OUT_W1TS_REG as *mut _, 0x1 << idx);           
     }
     loop {}
 }
@@ -114,18 +115,13 @@ pub fn delay(clocks: u32) {
 
 Now we have cycle accurate counting we can delay for one second by waiting for the number of cycles the processor will do in one second. The default clock speed on most ESP boards is 40mhz, hence waiting for 40 million cycles equates to a one second delay.
 
-Bringing the snippets together we now have `main` that looks like this.
+Bringing the snippets together and cleaning up the code into functions, we now have `main` that looks like this.
 
 ```rust
 #[no_mangle]
 fn main() -> ! {
-
     // configure the pin as an output
-    unsafe {
-        core::ptr::write_volatile(GPIO_ENABLE_W1TS_REG as *mut _, 0x1 << BLINKY_GPIO);
-        // 0x100 makes this pin a simple gpio pin - see the technical reference
-        core::ptr::write_volatile(GPIO_FUNCX_OUT_SEL_CFG as *mut _, 0x100); 
-    }
+    configure_pin_as_output(BLINKY_GPIO);
 
     loop {
         set_led(BLINKY_GPIO, true);
@@ -148,7 +144,7 @@ Now I know what most of you are thinking at this point, it's not very Rusty; it 
 
 ## Limitations
 
-There are a few issues, the biggest being that the fork struggled with generating debug info; the external assembler does not support [CFI directives](https://sourceware.org/binutils/docs-2.24/as/CFI-directives.html#CFI-directives) something that all llvm targets must support. CFI directives can easily be removed with some preprocessing, but does of course add an extra step. After pushing past that issue, I was still getting relocation linker errors. I opened [an issue](https://github.com/espressif/llvm-xtensa/issues/10) to document my findings in the hopes it can be sorted.
+There are a few small teething issues, but by far the biggest being issue is that the fork struggles with generating debug info; the external assembler does not support [CFI directives](https://sourceware.org/binutils/docs-2.24/as/CFI-directives.html#CFI-directives) something that all llvm targets need to support. CFI directives can easily be removed with some preprocessing, but does of course add an extra step. After pushing past that issue, I was still getting relocation linker errors. I opened [an issue](https://github.com/espressif/llvm-xtensa/issues/10) to document my findings in the hopes it can be sorted in the next iteration of the llvm fork.
 
 ## Future work
 
@@ -165,6 +161,8 @@ Once the debuginfo issue is sorted, I hope to start developing an ecosystem of H
 ---
 
 <br/>
+
+[^gpio_pin]: Note that this only applies for GPIO's 0 to 31, the rest of the GPIO's use a different register.
 
 [^2]: This is not always the case if the pin the LED is connected to does not default to the correct iomux function, see the quickstart example for more info.
 
