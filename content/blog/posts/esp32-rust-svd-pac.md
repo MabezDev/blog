@@ -15,7 +15,7 @@ Since my [last post](https://mabez.dev/blog/posts/esp32-rust/) I've been quietly
 
 ## Fixing `xtensa-rust-quickstart`
 
-As noted in my previous post, running Rust applications on the ESP32 required the use of a JTAG debugger as the board would reset repeatedly. My suspicion was a watch dog reset, but my [initial experiments on disabling the watchdog](https://github.com/MabezDev/xtensa-rust-quickstart/pull/4/commits/d8d6971285d20aacb6db32a68138c58a77fa9efa) did not appear to be working. I decided to inspect the openocd source to see what the debugger does when it connects, it turns out that the ESP32 has another 2 timer based watch dogs as seen [being disabled by openocd here](https://github.com/espressif/openocd-esp32/blob/97ba3a6bb9eaa898d91df923bbedddfeaaaf28c9/src/target/esp32.c#L431); after disabling those two watchdogs, its was now possible to flash and run code with just the USB cable connected!
+As noted in my previous post, running Rust applications on the ESP32 required the use of a JTAG debugger as the board would reset repeatedly. My suspicion was a watch dog reset, but my [initial experiments on disabling the watchdog](https://github.com/MabezDev/xtensa-rust-quickstart/pull/4/commits/d8d6971285d20aacb6db32a68138c58a77fa9efa) did not appear to be working. I decided to inspect the openocd source to see what the debugger does when it connects, it turns out that the ESP32 has another 2 timer based watch dogs as seen [being disabled by openocd here](https://github.com/espressif/openocd-esp32/blob/97ba3a6bb9eaa898d91df923bbedddfeaaaf28c9/src/target/esp32.c#L431); after disabling those two watchdogs, its was possible to flash and run code with just the USB cable connected!
 
 ## Creating the `esp32` peripheral access crate
 
@@ -46,7 +46,7 @@ fn disable_rtc_wdt(rtccntl: &mut esp32::RTCCNTL) {
 }
 ```
 
-To generate the initial SVD, the data has to come from somewhere. Intially @jeandudey put together an SVD including just the GPIO peripheral, but [this approach would be a lot of work](https://github.com/esp-rs/esp32-hal/pull/2#issuecomment-565825098) to generate info for the entire chip. I decided to explore parsing the info from the esp-idf (espressif's C based HAL/libs)code documentation, hence [idf2svd](https://github.com/MabezDev/idf2svd) was born; it does a pretty good job of scraping 95%~ of the data we need but [there are still a few things](https://github.com/MabezDev/idf2svd/issues) that could be improved.
+To generate the initial SVD, the data has to come from somewhere. Intially @jeandudey put together an SVD including just the GPIO peripheral, but [this approach would be a lot of work](https://github.com/esp-rs/esp32-hal/pull/2#issuecomment-565825098) to generate info for the entire chip. I decided to explore parsing the info from the esp-idf (espressif's C based HAL/libs) code documentation, hence [idf2svd](https://github.com/MabezDev/idf2svd) was born; it does a pretty good job of scraping 95%~ of the data we need but [there are still a few things](https://github.com/MabezDev/idf2svd/issues) that could be improved.
 
 Fortunately a lot of the issues with the generated data can be fixed with the [svd patching tool](https://github.com/stm32-rs/svdtools), there have already been a few PR's to fix missing peripherals that idf2svd [missed](https://github.com/esp-rs/esp32/pull/8) or [clean up register]((https://github.com/esp-rs/esp32/pull/7)) and bitfield names. Any PR's to clean up the SVD are very welcome!
 
