@@ -6,11 +6,7 @@ draft=false
 tags=["rust", "esp32", "hal", "svd"]
 +++
 
-Since my [last post](https://mabez.dev/blog/posts/esp32-rust/) I've been quietly working on building the humble beginnings of an ecosystem around the esp32 for Rust.
-
-## Summary
-
-The short version of this post is as follows:
+Since my [last post](https://mabez.dev/blog/posts/esp32-rust/) I've been quietly working on building the humble beginnings of an ecosystem around the ESP32 for Rust. The short version of this post is as follows:
 
 * [This PR](https://github.com/MabezDev/xtensa-rust-quickstart/pull/4) means the quickstart repo can now flash and run code without a debugger! Simply using the `flash` or `flash_release` scripts will flash your code and begin running your code
 * [idf2svd](https://github.com/MabezDev/idf2svd) has been created which uses the documentation from `esp-idf` to generate svd files fit for consumption by [svd2rust](https://github.com/rust-embedded/svd2rust)
@@ -19,7 +15,7 @@ The short version of this post is as follows:
 
 ## Fixing `xtensa-rust-quickstart`
 
-As noted in my previous post, running Rust applications on the ESP32 required the use of a JTAG debugger as the board would reset repeatedly. My suspicion was a watch dog reset, but my [initial experiments on disabling the watchdog](https://github.com/MabezDev/xtensa-rust-quickstart/pull/4/commits/d8d6971285d20aacb6db32a68138c58a77fa9efa) did not appear to be working. I decided to inspect the openocd source to see what the debugger does when it connects, it turns out that the ESP32 has another 2 timer based watch dogs as seen [being disabled by openocd here](https://github.com/espressif/openocd-esp32/blob/97ba3a6bb9eaa898d91df923bbedddfeaaaf28c9/src/target/esp32.c#L431); after disabling those two watchdogs, its is possible to flash and run code with just the USB cable connected!
+As noted in my previous post, running Rust applications on the ESP32 required the use of a JTAG debugger as the board would reset repeatedly. My suspicion was a watch dog reset, but my [initial experiments on disabling the watchdog](https://github.com/MabezDev/xtensa-rust-quickstart/pull/4/commits/d8d6971285d20aacb6db32a68138c58a77fa9efa) did not appear to be working. I decided to inspect the openocd source to see what the debugger does when it connects, it turns out that the ESP32 has another 2 timer based watch dogs as seen [being disabled by openocd here](https://github.com/espressif/openocd-esp32/blob/97ba3a6bb9eaa898d91df923bbedddfeaaaf28c9/src/target/esp32.c#L431); after disabling those two watchdogs, its was now possible to flash and run code with just the USB cable connected!
 
 ## Creating the `esp32` peripheral access crate
 
@@ -56,13 +52,13 @@ Fortunately a lot of the issues with the generated data can be fixed with the [s
 
 ## Bonus: Using cortex-m debug with the ESP32
 
-A side effect of creating the SVD file for svd2rust is that we can now use that SVD file in other applications. The arm developers among you may have heard of an vscode extension called [cortex-m debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug), on top of GDB debugging it provided really nice infographics about register and peripherals; it does this by, yep you guessed it, using the SVD files that cortex-m silicon vendors provide.
+A side effect of creating the SVD file for svd2rust is that we can now use that SVD file in other applications. The arm developers among you may have heard of an vscode extension called [cortex-m debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug), on top of GDB debugging it provided really nice info about register and peripherals values; it does this by, yep you guessed it, using the SVD files that cortex-m silicon vendors provide.
 
 Getting it running with the ESP32 is actually pretty simple; obviously we will required `xtensa-esp32-elf-gdb` which we can get from downloading the [xtensa toolchain](https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html#setup-toolchain) from espressif, along with their [openocd server](https://github.com/espressif/openocd-esp32).
 
 ### Configuration
 
-Here is the example configuration taken from `xtensa-rust-quickstart`; its important to note that cortex-m expects the toolchain's gdb to be called `arm-non-eabi-gdb` hence, where ever you specific the toolchain path there must be a file called `arm-none-eabi-gdb` else it won't work. I chose to just symlink to `xtensa-esp32-elf-gdb` `arm-none-eabi-gdb`.
+Here is the example configuration taken from `xtensa-rust-quickstart`; its important to note that cortex-m debug expects the toolchain's gdb to be called `arm-non-eabi-gdb` hence, where ever you specify the toolchain path there must be a file called `arm-none-eabi-gdb` else it won't work. I chose to just symlink `xtensa-esp32-elf-gdb` to `arm-none-eabi-gdb`.
 
 ```jsonc
 // the config inside launch.json
@@ -87,6 +83,11 @@ Here is the example configuration taken from `xtensa-rust-quickstart`; its impor
 },
 ```
 
+<img style="width: 100%; height:auto" src="/debug-with-svd.png"/>
+It even gives shows you the xtensa register values!
+<img style="width: 100%; height:auto" src="/xtensa-reg-display.png"/>
+
+The best part about this approach is that it's language agnostic, meaning if you use the esp-idf, the arduino core etc you get all the benefits even if your not using Rust. Like I said earlier the SVD is still a little rough, so patches are very welcome!
 
 ## What's next
 
