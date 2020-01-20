@@ -1,5 +1,5 @@
 +++
-title="Rust on the ESP32 - SVD's, PAC's and the quest for nicer code"
+title="Rust on the ESP32 - SVD's, PAC's and USB flashing"
 date=2020-01-13
 draft=false
 [taxonomies]
