@@ -100,7 +100,7 @@ Finally, if you appreciate the effort going into this project, [consider sponsor
 
 - [xtensa-quickstart](https://github.com/MabezDev/xtensa-rust-quickstart) - A quickstart project for using Rust on xtensa
 - [rust-xtensa](https://github.com/MabezDev/rust-xtensa) - The xtensa fork of Rust
-- [esp-rs](https://github.com/esp32-rs) - The `esp-rs` organization
+- [esp-rs](https://github.com/esp-rs) - The `esp-rs` organization
 - [github](https://github.com/MabezDev) - My github
 
 <br/>
