@@ -85,7 +85,7 @@ Here is the example configuration taken from `xtensa-rust-quickstart`; its impor
 ```
 
 <img style="width: 100%; height:auto" src="/debug-with-svd.png"/>
-It even gives shows you the processor register values!
+It even shows you the processor register values!
 <img style="width: 100%; height:auto" src="/xtensa-reg-display.png"/>
 
 The best part about this approach is that it's language & framework agnostic, meaning if you use the esp-idf, the arduino core or anything else you can still use the SVD even if your not using Rust. Like I said earlier the SVD is still a little rough around the edges, so patches are very welcome!
