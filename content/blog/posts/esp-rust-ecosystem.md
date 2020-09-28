@@ -19,10 +19,10 @@ I have also reworked the build process, as well as tagging releases. It is no lo
 
 ### cargo-espflash
 
-For those of you not familiar with developing on ESP* platforms, there is a flashing tool `esptool.py` which will flash your program to the device. [@icewind1991](https://github.com/icewind1991) began rewriting this tool in Rust, called [espflash](https://github.com/esp-rs/espflash). [@jessebraham](https://github.com/jessebraham) then submitted [a PR which added a cargo interface](https://github.com/esp-rs/espflash/pull/1) to it, meaning we can easily build and flash all in one go, for example flashing the blinky example in the ESP32 HAL:
+For those of you not familiar with developing on ESP* platforms, there is a flashing tool `esptool.py` which will flash your program to the device. [@icewind1991](https://github.com/icewind1991) began rewriting this tool in Rust, called [espflash](https://github.com/esp-rs/espflash). [@jessebraham](https://github.com/jessebraham) then submitted [a PR which added a cargo interface](https://github.com/esp-rs/espflash/pull/1) to it, meaning we can easily build and flash all in one go, for example building and flashing the blinky example in the ESP32 HAL:
 
 ```bash
-$ cargo espflash --chip esp32 --example blinky --target xtensa-esp32-none-elf /dev/ttyUSB0
+$ cargo espflash --chip esp32 --example blinky /dev/ttyUSB0
 ```
 
 It's really nice to invoke cargo once, make a coffee, and have your code running on the board when you get back! We've been adding more features to the tool, like reading back board info (flash size, CPU revision etc) in [#3](https://github.com/esp-rs/espflash/pull/3), and allowing faster flash speeds for the ESP32 in [#5](https://github.com/esp-rs/espflash/pull/5).
@@ -35,7 +35,7 @@ It's really nice to invoke cargo once, make a coffee, and have your code running
 
 After my last post I set to improve the runtime crate to include support for exceptions, which [I started before](https://github.com/esp-rs/xtensa-lx6-rt/pull/6) taking a short break. In that time [@arjanmels](https://github.com/arjanmels) championed it, fully implementing exception and interrupt handling for the lx6 CPU of the ESP32! On top of that, for those of you familiar with the `cortex-m-rt` crates, we implemented the attribute macros for defining `#[interrupt]`/`#[exception]` handlers and the `#[entry]` point to the program. Previously [`xtensa-lx6`](https://github.com/esp-rs/xtensa-lx6) was empty, but we have since implemented (and moved code from rt where neccessary), including the on chip [timers](https://docs.rs/xtensa-lx6/0.2.0/xtensa_lx6/timer/index.html) and a series of [mutex](https://docs.rs/xtensa-lx6/0.2.0/xtensa_lx6/mutex/index.html) implementations for the platform.
 
-Meanwhile [@icewind1991](https://github.com/icewind1991) began writing a runtime crate for the [lx106](https://github.com/icewind1991/xtensa-lx106-rt), the processor in a ESP8266. We found that between the `xtensa-lx` series there were not many differences, confirming what a [core esp-idf developer mentioned](https://github.com/esp-rs/xtensa-lx-rt/issues/5#issuecomment-578419057) previously, therefore we decided to merge the lx6 and lx106 crates producing `xtensa-lx` and `xtensa-lx-rt` with features for each silicon revision.
+Meanwhile [@icewind1991](https://github.com/icewind1991) began writing a runtime crate for the [lx106](https://github.com/icewind1991/xtensa-lx106-rt), the processor in a ESP8266. We found that between the `xtensa-lx` series there were not many differences, confirming what a [core esp-idf developer mentioned](https://github.com/esp-rs/xtensa-lx-rt/issues/5#issuecomment-578419057) previously, therefore we decided to merge the lx6 and lx106 crates producing [`xtensa-lx`](https://github.com/esp-rs/xtensa-lx) and [`xtensa-lx-rt`](https://github.com/esp-rs/xtensa-lx-rt) with features for each silicon revision.
 
 ## The HAL crates
 
@@ -53,8 +53,8 @@ With the compiler changes and HAL's being created, the old quickstart needed som
 
 ## What's next?
 
-* I'd love to see more contributors, as it's easier than ever to contribute, both HAL's are in a good spot to pick a hardware feature and implement it in Rust! 
-* Myself and [@arjanmels](https://github.com/arjanmels) are looking [at WiFi/Bluetooth support](https://github.com/esp-rs/esp32-wifi), but haven't had much luck so far. 
+* I'd love to see more contributors as it's easier than ever to contribute if you are familiar with Rust or embedded; both HAL's are in a good spot to pick a hardware feature and implement it in Rust! 
+* Myself and [@arjanmels](https://github.com/arjanmels) are looking [at WiFi/Bluetooth support](https://github.com/esp-rs/esp32-wifi) for the ESP32, but haven't had much luck so far. 
 * At some point I'd like to start looking into integrating with an existing Rust RTOS, perhaps [tockos](https://www.tockos.org/) or [rtic](https://rtic.rs/0.5/book/en/).
 
 At this point I'd like to say a big thank you to all the contributors who have helped along the way so far!
