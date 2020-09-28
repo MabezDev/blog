@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https:&#x2F;&#x2F;mabez.dev&#x2F;apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon.ico"
+  />
+  <link rel="stylesheet" href="https:&#x2F;&#x2F;mabez.dev&#x2F;style.css"/>
+  <title>Scott Mabin</title>
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jan 13, 2020</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  4 min read
+  
+</span>
+</small>
+		
+	  </div>
+	  <h1>Rust on the ESP32 - SVD&#x27;s, PAC&#x27;s and USB flashing</h1>
+	</header>
+	<div class="content">
+	  <p>Since my <a href="https://mabez.dev/blog/posts/esp32-rust/">last post</a> I've been working on building the humble beginnings of an ecosystem around the ESP32 for Rust. The short version of this post is as follows:</p>
+<ul>
+<li><a href="https://github.com/MabezDev/xtensa-rust-quickstart/pull/4">This PR</a> means the quickstart repo can now flash and run code without a debugger! Simply using the <code>flash</code> or <code>flash_release</code> scripts will flash your code and begin running your code</li>
+<li><a href="https://github.com/MabezDev/idf2svd">idf2svd</a> has been created which uses the documentation from <code>esp-idf</code> to generate svd files fit for consumption by <a href="https://github.com/rust-embedded/svd2rust">svd2rust</a></li>
+<li>Based on the generated SVD file, there is now a <a href="https://docs.rs/esp32/latest/esp32/">PAC (Peripheral access crate)</a> for the ESP32.</li>
+</ul>
+<h2 id="fixing-xtensa-rust-quickstart">Fixing <code>xtensa-rust-quickstart</code></h2>
+<p>As noted in my previous post, running Rust applications on the ESP32 required the use of a JTAG debugger as the board would reset repeatedly. My suspicion was a watch dog reset, but my <a href="https://github.com/MabezDev/xtensa-rust-quickstart/pull/4/commits/d8d6971285d20aacb6db32a68138c58a77fa9efa">initial experiments on disabling the watchdog</a> did not appear to be working. I decided to inspect the openocd source to see what the debugger does when it connects, it turns out that the ESP32 has another 2 timer based watch dogs as seen <a href="https://github.com/espressif/openocd-esp32/blob/97ba3a6bb9eaa898d91df923bbedddfeaaaf28c9/src/target/esp32.c#L431">being disabled by openocd here</a>; after disabling those two watchdogs, its was possible to flash and run code with just the USB cable connected!</p>
+<h2 id="creating-the-esp32-peripheral-access-crate">Creating the <code>esp32</code> peripheral access crate</h2>
+<p>The <a href="http://www.keil.com/pack/doc/CMSIS/SVD/html/index.html">SVD format</a> was created for ARM processors, but as it turns out it works very well for other processor architectures too. Espressif (unsuprisingly) don't provide an SVD file, so I would have to create my own; but before I move on to that, what do we actually get from creating and SVD file for the ESP32? Well, it allows us to use <a href="https://github.com/rust-embedded/svd2rust">svd2rust</a> to generate really nice register access API's. In the last post, all peripheral manipulation was achieved through seemingly random volatile writes at given addresses; of course this still needs to happen, but do we need to care about the address and bitshift values? svd2rust hides all of that behind a <a href="https://docs.rs/svd2rust/0.17.0/svd2rust/">simple, well documented API</a> which makes developing higher level abstractions far simpler. For example, disabling the rtc watchdog looks like this: 
+</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">disable_rtc_wdt</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">rtccntl</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">mut </span><span style="color:#c0c5ce;">esp32::RTCCNTL) {
+    </span><span style="color:#65737e;">/* Disables write protection */</span><span style="color:#c0c5ce;">
+    rtccntl.wdtwprotect.</span><span style="color:#96b5b4;">write</span><span style="color:#c0c5ce;">(|</span><span style="color:#bf616a;">w</span><span style="color:#c0c5ce;">| </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{ w.</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">WDT_WKEY_VALUE</span><span style="color:#c0c5ce;">) });
+    </span><span style="color:#65737e;">/* Disables all wdt stages &amp; the global watchdog flag itself */</span><span style="color:#c0c5ce;">
+    rtccntl.wdtconfig0.</span><span style="color:#96b5b4;">modify</span><span style="color:#c0c5ce;">(|_, </span><span style="color:#bf616a;">w</span><span style="color:#c0c5ce;">| </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{
+        w
+        .</span><span style="color:#96b5b4;">wdt_stg0</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
+        .</span><span style="color:#96b5b4;">wdt_stg1</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
+        .</span><span style="color:#96b5b4;">wdt_stg2</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
+        .</span><span style="color:#96b5b4;">wdt_stg3</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
+        .</span><span style="color:#96b5b4;">wdt_flashboot_mod_en</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">clear_bit</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">wdt_en</span><span style="color:#c0c5ce;">()
+        .</span><span style="color:#96b5b4;">clear_bit</span><span style="color:#c0c5ce;">()
+    });
+    </span><span style="color:#65737e;">/* Re-enables write protection */</span><span style="color:#c0c5ce;">
+    rtccntl.wdtwprotect.</span><span style="color:#96b5b4;">write</span><span style="color:#c0c5ce;">(|</span><span style="color:#bf616a;">w</span><span style="color:#c0c5ce;">| </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{ w.</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">) });
+}
+</span></pre>
+<p>Not a single address or bitshift in sight!</p>
+<p>To generate the initial SVD, the data has to come from somewhere. Intially @jeandudey put together an SVD including just the GPIO peripheral, but <a href="https://github.com/esp-rs/esp32-hal/pull/2#issuecomment-565825098">this approach would be a lot of work</a> to generate info for the entire chip. I decided to explore parsing the info from the esp-idf (Espressif's C based HAL/libs) code documentation, hence <a href="https://github.com/MabezDev/idf2svd">idf2svd</a> was born; it does a pretty good job of scraping 95%~ of the data we need but <a href="https://github.com/MabezDev/idf2svd/issues">there are still a few things</a> that could be improved.</p>
+<p>Fortunately a lot of the issues with the generated data can be fixed with the <a href="https://github.com/stm32-rs/svdtools">svd patching tool</a>, there have already been a few PR's to fix missing peripherals that idf2svd <a href="https://github.com/esp-rs/esp32/pull/8">missed</a> or <a href="(https://github.com/esp-rs/esp32/pull/7)">clean up register</a> and bitfield names. Any PR's to clean up the SVD are very welcome!</p>
+<h2 id="bonus-using-cortex-m-debug-with-the-esp32">Bonus: Using cortex-m debug with the ESP32</h2>
+<p>A side effect of creating the SVD file for svd2rust is that we can now use that SVD file in other applications. The arm developers among you may have heard of an vscode extension called <a href="https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug">cortex-m debug</a>, on top of GDB debugging, it provides really nice info about the state of the registers and peripherals; it does this by, yep you guessed it, using the SVD files that cortex-m silicon vendors provide.</p>
+<p>Getting it running with the ESP32 is actually pretty simple; instead of using the arm gdb we will be using <code>xtensa-esp32-elf-gdb</code> which we can get from downloading the <a href="https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html#setup-toolchain">xtensa toolchain</a> from Espressif, along with their <a href="https://github.com/espressif/openocd-esp32">openocd server</a>.</p>
+<h3 id="configuration">Configuration</h3>
+<p>Here is the example configuration taken from <code>xtensa-rust-quickstart</code>; its important to note that cortex-m debug expects the toolchain's gdb to be called <code>arm-non-eabi-gdb</code> hence, where ever you specify the toolchain path there must be a file called <code>arm-none-eabi-gdb</code> else it won't work. I chose to just symlink <code>xtensa-esp32-elf-gdb</code> to <code>arm-none-eabi-gdb</code> inside that directory.</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#65737e;">// the config inside launch.json
+</span><span style="color:#c0c5ce;">{
+    &quot;</span><span style="color:#a3be8c;">cwd</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">${workspaceRoot}</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">executable</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">target/xtensa-esp32-none-elf/debug/esp32</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">name</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">debug-with-svd</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">request</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">attach</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">type</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">cortex-debug</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">servertype</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">openocd</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">interface</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">jtag</span><span style="color:#c0c5ce;">&quot;,
+    </span><span style="color:#65737e;">/* Download this from the latest `esp32` crate: https://docs.rs/esp32/latest/esp32/ */
+    </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">svdFile</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">svd/esp32.svd</span><span style="color:#c0c5ce;">&quot;,
+    </span><span style="color:#65737e;">// complains about not allowed,
+    // but it does work.. https://github.com/Marus/cortex-debug/issues/111#issuecomment-504778053
+    </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">serverpath</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">${env:HOME}/programs/openocd-esp32/bin/openocd</span><span style="color:#c0c5ce;">&quot;,
+    </span><span style="color:#65737e;">// for this to work you will have to run `ln -s xtensa-esp32-elf-gdb arm-none-eabi-gdb`
+    </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">toolchainPath</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">${env:HOME}/programs/xtensa-esp32-elf/bin</span><span style="color:#c0c5ce;">&quot;,
+    &quot;</span><span style="color:#a3be8c;">configFiles</span><span style="color:#c0c5ce;">&quot;: [
+        &quot;</span><span style="color:#a3be8c;">openocd.cfg</span><span style="color:#c0c5ce;">&quot;
+    ],
+},
+</span></pre><img style="width: 100%; height:auto" src="/debug-with-svd.png"/>
+It even shows you the processor register values!
+<img style="width: 100%; height:auto" src="/xtensa-reg-display.png"/>
+<p>The best part about this approach is that it's language &amp; framework agnostic, meaning if you use the esp-idf, the arduino core or anything else you can still use the SVD even if your not using Rust. Like I said earlier the SVD is still a little rough around the edges, so patches are very welcome!</p>
+<h2 id="what-s-next">What's next</h2>
+<p>At the time of writing the Espressif have just released there third iteration of their llvm fork, so I will be spending a lot of time building and updating the forks and libraries to support that. The new fork should also fix some long standing and annoying bugs outlined in my first post. Expect another post soon if thats the case!</p>
+<p>Finally, if you appreciate the effort going into this project, <a href="http://github.com/mabezdev">consider sponsoring me on Github</a>.</p>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/MabezDev/xtensa-rust-quickstart">xtensa-quickstart</a> - A quickstart project for using Rust on xtensa</li>
+<li><a href="https://github.com/MabezDev/rust-xtensa">rust-xtensa</a> - The xtensa fork of Rust</li>
+<li><a href="https://github.com/esp-rs">esp-rs</a> - The <code>esp-rs</code> organization</li>
+<li><a href="https://github.com/MabezDev">github</a> - My github</li>
+</ul>
+<br/>
+<hr />
+<br/>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;rust&#x2F;">rust</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;esp32&#x2F;">esp32</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;hal&#x2F;">hal</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;svd&#x2F;">svd</a></span>
+		
+		
+	  </p>
+	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1167 Words</p>
+	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2020-01-13</p>
+	</footer>
+  </article>
+
+  
+  <div class="post-nav thin">
+	
+	<a class="next-post" href="https:&#x2F;&#x2F;mabez.dev&#x2F;blog&#x2F;posts&#x2F;esp-rust-ecosystem&#x2F;">
+	  <span class="post-nav-label">
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left">
+		  <line x1="19" y1="12" x2="5" y2="12"></line>
+		  <polyline points="12 19 5 12 12 5"></polyline>
+		</svg>&nbsp;Newer</span><br>
+		<span>Rust on the ESP32 &amp; ESP8266 - Building an ecosystem</span>
+	</a>
+	
+	
+	<a class="prev-post" href="https:&#x2F;&#x2F;mabez.dev&#x2F;blog&#x2F;posts&#x2F;esp32-rust&#x2F;">
+	  <span class="post-nav-label">Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><br>
+	  <span>Rust on the ESP32</span>
+	</a>
+	
+  </div>
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2020 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Scott Mabin</title>
+        <link>https%3A//mabez.dev</link>
+        <description>Scott Mabin&#x27;s blog</description>
+        <generator>Zola</generator>
+        <language>en</language>
+        <atom:link href="https%3A//mabez.dev/tags/llvm/rss.xml" rel="self" type="application/rss+xml"/>
+        <lastBuildDate>Tue, 10 Sep 2019 00:00:00 +0000</lastBuildDate>
+        
+            <item>
+                <title>Rust on the ESP32</title>
+                <pubDate>Tue, 10 Sep 2019 00:00:00 +0000</pubDate>
+                <link>https%3A//mabez.dev/blog/posts/esp32-rust/</link>
+                <guid>https%3A//mabez.dev/blog/posts/esp32-rust/</guid>
+                <description>&lt;p&gt;About six months ago, I made a &lt;a href=&quot;https:&#x2F;&#x2F;www.reddit.com&#x2F;r&#x2F;rust&#x2F;comments&#x2F;ar2d3r&#x2F;espressif_have_finally_released_an_llvm_fork_this&#x2F;&quot;&gt;post on reddit&lt;&#x2F;a&gt; highlighting the launch of Espressif&#x27;s llvm xtensa fork, not too long after, I had a working &lt;code&gt;rustc&lt;&#x2F;code&gt; toolchain capable of generating xtensa assembly. At this point I had to put this project to the side to finish my final year of university. Funnily enough I didn&#x27;t stray too far, my final year project used Rust to create a &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MWatch&quot;&gt;&#x27;smartwatch&#x27;&lt;&#x2F;a&gt; (I may write about this in the future, if anyone is interested). &lt;&#x2F;p&gt;
+&lt;p&gt;Since then I have seen a few posts utilising my fork to run Rust on the &lt;a href=&quot;https:&#x2F;&#x2F;www.espressif.com&#x2F;en&#x2F;products&#x2F;hardware&#x2F;esp32&#x2F;overview&quot;&gt;ESP32&lt;&#x2F;a&gt; (&lt;a href=&quot;https:&#x2F;&#x2F;dentrassi.de&#x2F;2019&#x2F;06&#x2F;16&#x2F;rust-on-the-esp-and-how-to-get-started&#x2F;&quot;&gt;see this great write up&lt;&#x2F;a&gt; by ctron, if you haven&#x27;t already), most of which are building on top of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;esp-idf&quot;&gt;esp-idf&lt;&#x2F;a&gt; which is written in C. In this post I&#x27;ll be discussing the steps I took to generate valid binaries for the xtensa architecture with &lt;code&gt;rustc&lt;&#x2F;code&gt; and then write some &lt;code&gt;no_std&lt;&#x2F;code&gt; code to build a blinky program for the ESP32 only using Rust!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;hacking-the-compiler&quot;&gt;Hacking the compiler&lt;&#x2F;h2&gt;
+&lt;p&gt;In March of 2019, Espressif released their first run at an &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;llvm-xtensa&quot;&gt;llvm fork&lt;&#x2F;a&gt; to support the xtensa architecure. Shortly after I got to work bootstrapping Rust to use this newly created fork. Prior to this project, I&#x27;d had no experience with the compiler, fortunately I came across the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;52787&quot;&gt;RISCV PR&lt;&#x2F;a&gt; which gave me a rough idea of what was required. After &lt;em&gt;many&lt;&#x2F;em&gt; build attempts I finally got it working; I was now able to generate xtensa assembly from Rust source code!&lt;&#x2F;p&gt;
+&lt;p&gt;The next step was to assemble and link the generated assembly. The llvm fork in it&#x27;s current state cannot perform object generation, so we must use an external assembler. Luckily Rust allows us to do so by specifying the &lt;code&gt;linker_flavor&lt;&#x2F;code&gt; as &lt;code&gt;gcc&lt;&#x2F;code&gt; and providing a path to the linker with the &lt;code&gt;linker&lt;&#x2F;code&gt; target option, in this case &lt;code&gt;xtensa-esp32-elf-gcc&lt;&#x2F;code&gt;. After that I created a few built-in targets (which you can see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;rust-xtensa&#x2F;blob&#x2F;ad570c5cb999f62a03156286fdb5d3d1bbd0fb8b&#x2F;src&#x2F;librustc_target&#x2F;spec&#x2F;xtensa_esp32_none_elf.rs&quot;&gt;here&lt;&#x2F;a&gt;); &lt;code&gt;xtensa-esp32-none-elf&lt;&#x2F;code&gt; for the ESP32; &lt;code&gt;xtensa-esp8266-none-elf&lt;&#x2F;code&gt; for the ESP8266; finally the &lt;code&gt;xtensa-unknown-none-elf&lt;&#x2F;code&gt; target for a generic xtensa target.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;blinky-code&quot;&gt;Blinky code&lt;&#x2F;h2&gt;
+&lt;p&gt;Now lets try and get a ESP32 board to blink the onboard LED using just Rust. First off, we need our basic program structure. The &lt;code&gt;xtensa_lx6_rt&lt;&#x2F;code&gt; crate does most of the heavy lifting in this respect, we simply need to define an entry point and the panic handler. Some of this may look vaguely familiar if you have any experience with &lt;code&gt;cortex-m&lt;&#x2F;code&gt; development on Rust, I&#x27;ve tried to mirror the API as best as I can.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#![&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;no_std&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#![&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;no_main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;use&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; xtensa_lx6_rt as _;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;use &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;core::panic::PanicInfo;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; Entry point - called by xtensa_lx6_rt after initialisation
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;no_mangle&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; ! {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{}
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; Simple panic handler
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;panic_handler&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;panic&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;_info&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;PanicInfo) -&amp;gt; ! {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{}
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now lets add some register definitions for the peripherals we want to use. For our blinky program, we will need to control the GPIO peripheral. In the ESP32 (and most modern processors) peripherals are mapped to memory adresses, commonly refered to as memory mapped peripherals. To control a peripheral we simply need to write values to the right addresses in memory, with respect to the reference manual supplied by the chip manufacturer.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; GPIO output enable reg
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_ENABLE_W1TS_REG&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x3FF44024&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; GPIO output set register
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_OUT_W1TS_REG&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x3FF44008&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; GPIO output clear register
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_OUT_W1TC_REG &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x3FF4400C&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; The GPIO hooked up to the onboard LED
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;BLINKY_GPIO&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; GPIO function mode
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_FUNCX_OUT_BASE&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x3FF44530&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;const &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_FUNCX_OUT_SEL_CFG&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_FUNCX_OUT_BASE &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;+ (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;BLINKY_GPIO &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;4&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Using these definitions it should be possible to change the gpio for your board&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#gpio_pin&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; by changing the &lt;code&gt;BLINKY_GPIO&lt;&#x2F;code&gt;; for my board (NODEMCU ESP-32S) it was GPIO2.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;initialisation&quot;&gt;Initialisation&lt;&#x2F;h3&gt;
+&lt;p&gt;Next lets setup the pin as a GPIO output. For the ESP32, this is a two step process&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#gpio_pin&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Firstly, its simply a case of setting a bit in the GPIO ouput enable register. Secondly the pin has to be configured in GPIO mode. There are not enough pins for all the possible peripherals in the chip, to combat this each pin can have multiple function modes. In the case of the ESP32, each pin has up to 256 different functions, although not all are mapped. To put the pin in GPIO mode, we need to put in mode 256 (0x100), we do this by writing to the function select register. After issuing those two register writes, we should be able to turn on the GPIO by setting the relevant bit inside the GPIO set register&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;no_mangle&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; ! {
+
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; configure the pin as an output
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        core::ptr::write_volatile(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_ENABLE_W1TS_REG &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;*mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;BLINKY_GPIO&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; 0x100 makes this pin a simple gpio pin - see the technical reference for more info
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;core::ptr::write_volatile(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_FUNCX_OUT_SEL_CFG &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;*mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x100&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;); 
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; turn on the LED
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        core::ptr::write_volatile(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;GPIO_OUT_W1TS_REG &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;*mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;&amp;lt; idx);           
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{}
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;delaying&quot;&gt;Delaying&lt;&#x2F;h3&gt;
+&lt;p&gt;For the next stage of our blinky program, we need a way to delay; a simple approach could use &lt;code&gt;for&lt;&#x2F;code&gt; loop like so.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;clocks&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; dummy_var: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_ in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;..clocks {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ core::ptr::read_volatile(&amp;amp;dummy_var) };
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We add the volatile read so that the compiler doesn&#x27;t optimise our delay away. The problem with this approach is that depending of the optimisation level, the number of clock cycles each iteration of the loop changes. We need a cycle accurate way of delaying, fortunately the ESP32 has an internal clock counting register which can be accessed with the read special register &lt;code&gt;rsr&lt;&#x2F;code&gt; instruction. Now are delay function looks like this.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F;&#x2F; cycle accurate delay using the cycle counter register
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;clocks&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; NOTE: does not account for rollover
+    &#x2F;&#x2F; ommitted: the asm to read the ccount
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; target = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;get_ccount&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() + clocks;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;get_ccount&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() &amp;gt; target {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;break&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+        }
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now we have cycle accurate counting we can delay for one second by waiting for the number of cycles the processor will do in one second. The default clock speed on most ESP boards is 40mhz, hence waiting for 40 million cycles equates to a one second delay.&lt;&#x2F;p&gt;
+&lt;p&gt;Bringing the snippets together and cleaning up the code into functions, we now have &lt;code&gt;main&lt;&#x2F;code&gt; that looks like this.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;no_mangle&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;main&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() -&amp;gt; ! {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; configure the pin as an output
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;configure_pin_as_output&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;BLINKY_GPIO&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;loop &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;set_led&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;BLINKY_GPIO&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;true&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;CORE_HZ&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;set_led&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;BLINKY_GPIO&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;false&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;delay&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;CORE_HZ&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;After flashing to the board, and firing up our JTAG debugger&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, we are greeted with a blinking LED!&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;video muted controls style=&quot;width: 100%; height:auto&quot;&gt;
+&lt;source src=&quot;&#x2F;esp-rust-blinky.webm&quot; type=&quot;video&#x2F;mp4&quot;&gt;
+&lt;&#x2F;video&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;The full source can be found in the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;xtensa-rust-quickstart&quot;&gt;the xtensa quickstart repo&lt;&#x2F;a&gt; if you wish to try it for yourself.&lt;&#x2F;p&gt;
+&lt;p&gt;Now I know what most of you are thinking at this point, it&#x27;s not very Rusty; it contains bundles of unsafe and there are no real abstractions here, and you are right; but it&#x27;s something to get the ball rolling.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;limitations&quot;&gt;Limitations&lt;&#x2F;h2&gt;
+&lt;p&gt;There are a few small teething issues, but by far the biggest being issue is that the fork struggles with generating debug info; the external assembler does not support &lt;a href=&quot;https:&#x2F;&#x2F;sourceware.org&#x2F;binutils&#x2F;docs-2.24&#x2F;as&#x2F;CFI-directives.html#CFI-directives&quot;&gt;CFI directives&lt;&#x2F;a&gt; something that all llvm targets need to support. CFI directives can easily be removed with some preprocessing, but does of course add an extra step. After pushing past that issue, I was still getting relocation linker errors. I opened &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;llvm-xtensa&#x2F;issues&#x2F;10&quot;&gt;an issue&lt;&#x2F;a&gt; to document my findings in the hopes it can be sorted in the next iteration of the llvm fork.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;future-work&quot;&gt;Future work&lt;&#x2F;h2&gt;
+&lt;p&gt;Once the debuginfo issue is sorted, I hope to start developing an ecosystem of HAL&#x27;s and drivers similar to the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;stm32-rs&quot;&gt;stm32-rs&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;nrf-rs&quot;&gt;nrf-rs&lt;&#x2F;a&gt;; I&#x27;ve already started the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&quot;&gt;esp-rs&lt;&#x2F;a&gt; organization which is where &lt;code&gt;xtensa-lx6-rt&lt;&#x2F;code&gt; currently resides. Espressif has started the upstream process, the first ten patches are now in review, there should be an update coming to their fork moving from the older llvm6 to llvm8 (and hopefully some other additions and fixes too!).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;links&quot;&gt;Links&lt;&#x2F;h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;xtensa-rust-quickstart&quot;&gt;xtensa-quickstart&lt;&#x2F;a&gt; - A quickstart project for using Rust on xtensa&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;rust-xtensa&quot;&gt;rust-xtensa&lt;&#x2F;a&gt; - The xtensa fork of Rust&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&quot;&gt;github&lt;&#x2F;a&gt; - My github&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;br&#x2F;&gt;
+&lt;hr &#x2F;&gt;
+&lt;br&#x2F;&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;gpio_pin&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;Note that this only applies for GPIO&#x27;s 0 to 31, the rest of the GPIO&#x27;s use a different register.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;This is not always the case if the pin the LED is connected to does not default to the correct iomux function, see the quickstart example for more info.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;This step is actually very important, currently the board will reset endlessly on boot (I assume due to the watch dog not being disabled), but launching with the debugger works as expected.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</description>
+            </item>
+        
+    </channel>
+</rss>

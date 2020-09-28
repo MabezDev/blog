@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https:&#x2F;&#x2F;mabez.dev&#x2F;apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon.ico"
+  />
+  <link rel="stylesheet" href="https:&#x2F;&#x2F;mabez.dev&#x2F;style.css"/>
+  <title>Scott Mabin</title>
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Sep 15, 2020</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  5 min read
+  
+</span>
+</small>
+		
+	  </div>
+	  <h1>Rust on the ESP32 &amp; ESP8266 - Building an ecosystem</h1>
+	</header>
+	<div class="content">
+	  <p>Since my <a href="https://mabez.dev/blog/posts/esp32-rust-svd-pac/">last post, nearly 10 months ago</a> a lot has changed. For one, its not just me working on this any more! Community members are starting to contribute to the various ESP related projects. The extra help meant we have made considerable progress which I will now take you through in this post.</p>
+<h2 id="the-compiler">The compiler</h2>
+<p>I have been working on cleaning up the <code>rustc</code> work, including rebasing regularly to keep up with upstream rustc changes. Recently, I have cleaned up and extracted the patches required to enable <code>Xtensa</code> &amp; <code>esp</code> development with Rust, firstly to make it easier to rebase onto a newer version of the compiler, but also in the hopes of one day being able to submit these patches upstream when the <code>Xtensa</code> target is upstreamed in llvm. You can see the patchset <a href="https://github.com/MabezDev/rust-xtensa-patches">here</a>. On that note, it seems no progress has been made on that front in the last 9 months; whilst Espressif are doing a great job responding to issues and fixing bugs, it seems the patches are stuck in review in llvm. I'm unsure what directions to take to get more attention to this. </p>
+<p>I have also reworked the build process, as well as tagging releases. It is no longer necessary to build LLVM seperately, as I have swapped out the LLVM submodule to the forked one, meaning you can just use normal rust build instructions. Starting now, I will also be tagging releases every time I rebase on upstream master; on top of which I am also offering prebuilt linux (sorry Windows &amp; Mac users) toolchains on the <a href="https://github.com/MabezDev/rust-xtensa/releases/tag/xtensa-v0.2.0">releases</a> (if you are building for Mac or Windows, please feel free to send me your prebuilt toolchains for upload).</p>
+<h2 id="tooling-improvements">Tooling improvements</h2>
+<h3 id="cargo-espflash">cargo-espflash</h3>
+<p>For those of you not familiar with developing on ESP* platforms, there is a flashing tool <code>esptool.py</code> which will flash your program to the device. <a href="https://github.com/icewind1991">@icewind1991</a> began rewriting this tool in Rust, called <a href="https://github.com/esp-rs/espflash">espflash</a>. <a href="https://github.com/jessebraham">@jessebraham</a> then submitted <a href="https://github.com/esp-rs/espflash/pull/1">a PR which added a cargo interface</a> to it, meaning we can easily build and flash all in one go, for example building and flashing the blinky example in the ESP32 HAL:</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> cargo espflash</span><span style="color:#bf616a;"> --chip</span><span style="color:#c0c5ce;"> esp32</span><span style="color:#bf616a;"> --example</span><span style="color:#c0c5ce;"> blinky /dev/ttyUSB0
+</span></pre>
+<p>It's really nice to invoke cargo once, make a coffee, and have your code running on the board when you get back! We've been adding more features to the tool, like reading back board info (flash size, CPU revision etc) in <a href="https://github.com/esp-rs/espflash/pull/3">#3</a>, and allowing faster flash speeds for the ESP32 in <a href="https://github.com/esp-rs/espflash/pull/5">#5</a>.</p>
+<h3 id="idf2svd">idf2svd</h3>
+<p><a href="https://github.com/jessebraham">@jessebraham</a> submitted a PR to <a href="https://github.com/MabezDev/idf2svd">idf2svd</a> to add support for generating ESP8266 SVD's, of which the esp8266-hal is built upon; <a href="https://mabez.dev/blog/posts/esp32-rust-svd-pac/">if you remeber back to the bonus section of my last post</a>, you will be able to use that SVD to debug ESP8266 applications too!</p>
+<h2 id="the-runtime-crates">The runtime crates</h2>
+<p>After my last post I set to improve the runtime crate to include support for exceptions, which <a href="https://github.com/esp-rs/xtensa-lx6-rt/pull/6">I started before</a> taking a short break. In that time <a href="https://github.com/arjanmels">@arjanmels</a> championed it, fully implementing exception and interrupt handling for the lx6 CPU of the ESP32! On top of that, for those of you familiar with the <code>cortex-m-rt</code> crates, we implemented the attribute macros for defining <code>#[interrupt]</code>/<code>#[exception]</code> handlers and the <code>#[entry]</code> point to the program. Previously <a href="https://github.com/esp-rs/xtensa-lx6"><code>xtensa-lx6</code></a> was empty, but we have since implemented (and moved code from rt where neccessary), including the on chip <a href="https://docs.rs/xtensa-lx6/0.2.0/xtensa_lx6/timer/index.html">timers</a> and a series of <a href="https://docs.rs/xtensa-lx6/0.2.0/xtensa_lx6/mutex/index.html">mutex</a> implementations for the platform.</p>
+<p>Meanwhile <a href="https://github.com/icewind1991">@icewind1991</a> began writing a runtime crate for the <a href="https://github.com/icewind1991/xtensa-lx106-rt">lx106</a>, the processor in a ESP8266. We found that between the <code>xtensa-lx</code> series there were not many differences, confirming what a <a href="https://github.com/esp-rs/xtensa-lx-rt/issues/5#issuecomment-578419057">core esp-idf developer mentioned</a> previously, therefore we decided to merge the lx6 and lx106 crates producing <a href="https://github.com/esp-rs/xtensa-lx"><code>xtensa-lx</code></a> and <a href="https://github.com/esp-rs/xtensa-lx-rt"><code>xtensa-lx-rt</code></a> with features for each silicon revision.</p>
+<h2 id="the-hal-crates">The HAL crates</h2>
+<h3 id="esp32">ESP32</h3>
+<p>With the runtime crates in good shape, we now had a good basis to build a HAL (Hardware abstraction layer). I started by submitting a simple <a href="https://github.com/esp-rs/esp32-hal/commit/8a3f2e750335623b551d59419e4e138659cc77aa">GPIO driver for the ESP32</a> implementing the <a href="https://github.com/rust-embedded/embedded-hal">embedded-hal digital traits</a>. Since then the features haven't stopped coming, primarily thanks once again to <a href="https://github.com/arjanmels">@arjanmels</a>. Checkout <a href="https://github.com/esp-rs/esp32-hal/tree/master/examples">the examples</a> to see what you can do with an ESP32 in pure Rust<sup class="footnote-reference"><a href="#pure-rust">1</a></sup>! </p>
+<h3 id="esp8266">ESP8266</h3>
+<p><a href="https://github.com/icewind1991">@icewind1991</a> has since started the ESP8266 HAL. One thing that is slowing down development is the fact that alot of the functions in the C SDK are simply binary blobs (or as Espressif refer to them, ROM functions). It means that re-implementing them in Rust requires disassembly  of the binaries and reverse engineering of the assembly to figure out whats going on. Whilst it is undoubtedly fun, it is a lot harder than looking at the source (which we can do with the ESP32). It's coming along nicely though, with support for GPIO, Serial, SPI and much more. Checkout the <a href="https://github.com/esp-rs/esp8266-hal">esp-rs/esp8266-hal</a> repo. <a href="https://github.com/jessebraham">@jessebraham</a> has started a BSP (board support package) for the D1 Mini ESP8266 board, built on top of the esp8266-hal, so if you have one of those board lying around check out the <a href="https://github.com/jessebraham/d1-mini">repo</a>!</p>
+<h2 id="the-quickstart">The quickstart</h2>
+<p>With the compiler changes and HAL's being created, the old quickstart needed some love. First on the list removing some unneeded compiler restrictions, mainly around allowing debug info generation, as the LLVM fork now supports that (See <a href="https://github.com/MabezDev/xtensa-rust-quickstart/pull/23">#23</a>). The biggest change has been adding runnable examples for both the ESP32 &amp; ESP8266; its now easier than ever to Rustup your Esp microcontroller! I have also added <a href="https://github.com/MabezDev/xtensa-rust-quickstart/blob/04f9fb79e9a6a519a3311bc1e5a5e22af7c93f29/src/main.rs#L1-L55">a brief overview</a> of how to target a different Xtensa target other than the ESP32 or ESP8266, though I'm not aware of any other boards using this architecture, would be very interested to hear about it if you are aware of any.</p>
+<h2 id="what-s-next">What's next?</h2>
+<ul>
+<li>I'd love to see more contributors as it's easier than ever to contribute if you are familiar with Rust or embedded; both HAL's are in a good spot to pick a hardware feature and implement it in Rust! </li>
+<li>Myself and <a href="https://github.com/arjanmels">@arjanmels</a> are looking <a href="https://github.com/esp-rs/esp32-wifi">at WiFi/Bluetooth support</a> for the ESP32, but haven't had much luck so far. </li>
+<li>At some point I'd like to start looking into integrating with an existing Rust RTOS, perhaps <a href="https://www.tockos.org/">tockos</a> or <a href="https://rtic.rs/0.5/book/en/">rtic</a>.</li>
+</ul>
+<p>At this point I'd like to say a big thank you to all the contributors who have helped along the way so far!</p>
+<p>Finally, if you appreciate the effort going into this, consider joining @davidkern, @DaMouse404 and others <a href="http://github.com/mabezdev">in sponsoring me</a>, it's very much appreciated &lt;3.</p>
+<iframe src="https://github.com/sponsors/MabezDev/card" title="Sponsor MabezDev" height="225" width="600" style="border: 0;"></iframe>
+<br>
+<hr />
+<br>
+<div class="footnote-definition" id="pure-rust"><sup class="footnote-definition-label">1</sup>
+<p>Not quite! We're still using the C bootloader to initialize the flash for now. Note that you can run applications entirely in RAM if you wish.</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;rust&#x2F;">rust</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;esp32&#x2F;">esp32</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;hal&#x2F;">hal</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;interrupts&#x2F;">interrupts</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;esp8266&#x2F;">esp8266</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;flash&#x2F;">flash</a></span>
+		
+		
+	  </p>
+	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1346 Words</p>
+	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2020-09-15</p>
+	</footer>
+  </article>
+
+  
+  <div class="post-nav thin">
+	
+	
+	<a class="prev-post" href="https:&#x2F;&#x2F;mabez.dev&#x2F;blog&#x2F;posts&#x2F;esp32-rust-svd-pac&#x2F;">
+	  <span class="post-nav-label">Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><br>
+	  <span>Rust on the ESP32 - SVD&#x27;s, PAC&#x27;s and USB flashing</span>
+	</a>
+	
+  </div>
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2020 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>

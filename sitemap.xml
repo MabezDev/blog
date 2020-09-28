@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    
+        <url>
+            <loc>https%3A//mabez.dev/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/blog/posts/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/blog/posts/esp-rust-ecosystem/</loc>
+            
+                <lastmod>2020-09-15</lastmod>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/blog/posts/esp32-rust-svd-pac/</loc>
+            
+                <lastmod>2020-01-13</lastmod>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/blog/posts/esp32-rust/</loc>
+            
+                <lastmod>2019-09-10</lastmod>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/esp32/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/esp8266/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/flash/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/hal/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/interrupts/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/llvm/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/rust/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/svd/</loc>
+            
+        </url>
+    
+</urlset>
