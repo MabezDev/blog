@@ -26,7 +26,7 @@ build_search_index = false
 theme = "hermit_zola"
 
 taxonomies = [
-           {name = "tags", rss = true}
+    {name = "tags", rss = true}
 ]
 
 [extra]
