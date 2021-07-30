@@ -1,5 +1,5 @@
 +++
-title="Rust on Espressif's chips"
+title="Rust on Espressif chips"
 date=2021-07-28
 draft=false
 [taxonomies]
