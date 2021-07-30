@@ -19,6 +19,13 @@
         </url>
     
         <url>
+            <loc>https%3A//mabez.dev/blog/posts/esp-rust-espressif/</loc>
+            
+                <lastmod>2021-07-28</lastmod>
+            
+        </url>
+    
+        <url>
             <loc>https%3A//mabez.dev/blog/posts/esp32-rust-svd-pac/</loc>
             
                 <lastmod>2020-01-13</lastmod>
@@ -48,6 +55,11 @@
         </url>
     
         <url>
+            <loc>https%3A//mabez.dev/tags/espressif/</loc>
+            
+        </url>
+    
+        <url>
             <loc>https%3A//mabez.dev/tags/flash/</loc>
             
         </url>
@@ -64,6 +76,11 @@
     
         <url>
             <loc>https%3A//mabez.dev/tags/llvm/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>https%3A//mabez.dev/tags/personal/</loc>
             
         </url>
     
