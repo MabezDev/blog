@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https:&#x2F;&#x2F;mabez.dev&#x2F;apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon.ico"
+  />
+  <link rel="stylesheet" href="https:&#x2F;&#x2F;mabez.dev&#x2F;style.css"/>
+  <title>Scott Mabin</title>
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Oct 18, 2021</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  5 min read
+  
+</span>
+</small>
+		
+	  </div>
+	  <h1>Rust on Espressif chips - 18-10-2021</h1>
+	</header>
+	<div class="content">
+	  <p>Now I am working at Espressif I plan on publishing updates roughly every quarter just to keep the community in the loop around the esp rust effort.</p>
+<h2 id="documentation-planning">Documentation &amp; Planning</h2>
+<p>One of the hardest parts in any community project is onboarding new developers, especially in the early stages of a project where API's, processes and tooling is changing rapidly; it can be frustrating to work on something one week, and in the next you're fighting to get it compiling again. We began work on <a href="https://esp-rs.github.io/book/">a book</a> in which we will try to keep as a source of truth for the Rust esp effort. This will include install instructions, tooling guides, ecosystem overviews and much more. </p>
+<p>We have also put together a <a href="https://github.com/orgs/esp-rs/projects/1">road map project</a> on github, with the aim of managing the project from Espressif's point of view, but also to allow new contributors to pick up backlog items. Simply comment in the issue if there is something you'd like to take a stab at, we're more than happy to assist and review. We also host bi-weekly meetings which anyone is welcome to attend, just drop a comment <a href="https://github.com/esp-rs/rust/discussions">in the latest discussion thread</a>.</p>
+<h2 id="using-the-rust-standard-library-on-espressif-chips">Using the Rust standard library on Espressif chips</h2>
+<p>In <a href="https://mabez.dev/blog/posts/esp-rust-espressif/">the last post</a>, I mentioned that was possible to use the Rust standard library thanks to <a href="https://github.com/ivmarkov">@ivmarkov</a>'s hard work; well, he's been at it again! He pushed forward and managed to upstream the standard library changes required to build <code>std</code> on top of <code>esp-idf</code>. From Rust 1.56 it the changes will be stable, meaning it's possible to use the upstream Rust toolchain to build the <code>std</code> platform for any RISC-V Espressif chip! Currently, that only includes the <code>esp32c3</code> but there are more to come. This change also applies to Xtensa chips, however they still require a custom toolchain due to the lack of a backend for Xtensa in upstream LLVM. For more info in the <code>std</code> effort, please see <a href="https://esp-rs.github.io/book/">the book</a>. I'd also like to take this time to thank the upstream Rust developers for the prompt and helpful reviews, in particular <a href="https://github.com/Amanieu">@Amanieu</a> for helping us push this over the finish line.</p>
+<h2 id="compiler">Compiler</h2>
+<p>The custom toolchain is a hindrance to developer onboarding, especially if developers have to build it themselves. We now offer a prebuilt toolchain's for all common OS's under the <a href="https://github.com/esp-rs/rust-build">esp-rs/rust-build</a> repository. A few days after a new Rust release we typically have the new compiler ready, unless we run into any issues; speaking of, we now test the compiler with a few projects in CI so hopefully we don't ship a broken compiler. Note that this extra compiler step is only required when targeting Espressif's Xtensa based chips.</p>
+<p>There have been a couple of improvements to the compiler fork since the last post, for one the patch set we have to manage has reduced in size thanks to the <code>std</code> library changes being upstreamed. There is now <code>asm!</code> support for the Xtensa architecture, which also means we have removed the old <code>llvm_asm!</code> macros from the <code>xtensa</code> crates and ported them to the new syntax.</p>
+<h2 id="tooling">Tooling</h2>
+<h3 id="svds">SVDs</h3>
+<p>SVDs have been coming along very nicely, we now <a href="https://github.com/espressif/svd/tree/main/svd">have official SVDs</a> for the <code>esp32c3</code>, <code>esp32s2</code> and the <code>esp32</code>. If you have been following this effort for a while, you may be thinking we already had an <code>esp32</code> SVD, well you would be correct! However, it was very hacky, missed a lot of peripherals and was all around horrible to work with. The new SVD aims to be more complete and importantly more consistent. One thing that has been missing from the official SVDs is interrupt information, however this has recently changed and interrupt information for each peripheral is now available. Overall the SVDs available now are in a great spot to feed into <code>svd2rust</code> and other tooling, ready for HAL creation.</p>
+<h3 id="espflash"><code>espflash</code></h3>
+<p><a href="https://github.com/esp-rs/espflash"><code>espflash</code></a> is a rewrite of Espressif's <a href="https://github.com/espressif/esptool"><code>esptool.py</code></a>, but also has <code>cargo</code> integration. It's been under heavy development and now has a <code>1.0</code> release! Including:</p>
+<ul>
+<li>Support for flashing:
+<ul>
+<li><code>esp32</code></li>
+<li><code>esp32c3</code></li>
+<li><code>esp32s2</code></li>
+<li><code>esp8266</code></li>
+</ul>
+</li>
+<li>Compression for faster flashing.</li>
+<li>Support for the <code>esp-idf</code> partition table format.</li>
+<li>Support for flashing a stock <code>esp-idf</code> bootloader.</li>
+<li>Removed support <code>xargo</code> &amp; <code>cargo xbuild</code>, now focusing support on <code>build-std</code>.</li>
+<li>Reading back flash info.</li>
+<li>Reading some EFUSE values.</li>
+<li><code>elf2image</code> functionality, for writing the formatted image to a file.</li>
+<li>Beautiful &amp; helpful error messages with <code>miette</code>.</li>
+</ul>
+<p>Big thanks to all the contributors in this release, especially <a href="https://github.com/icewind1991">@icewind1991</a>.</p>
+<h3 id="probe-rs"><code>probe-rs</code></h3>
+<p>We have also started adding support for flashing and debugging Espressif chips with <code>probe-rs</code>. As the RISC-V architecture is already supported in <code>probe-rs</code>, we set out to add support for the <code>esp32c3</code> initially. We are happy to report that <code>probe-rs</code> master now has a flash algorithm capable of flashing the <code>esp32c3</code>! The <a href="https://github.com/esp-rs/esp-flash-loader"><code>esp-flash-loader</code></a> repository contains the code for the <code>esp32c3</code> flash loader, but thanks for Espressif's ROM API it should be very easy to port the algorithm to the other chips. Xtensa support for <code>probe-rs</code> is planned eventually, but will take some time to implement. A big thank you to the <code>probe-rs</code> folks, in particular <a href="https://github.com/Yatekii">@Yatekii</a>, <a href="https://github.com/Tiwalun">@Tiwalun</a> and <a href="https://github.com/Dirbaio">@Dirbaio</a> for the reviews and assistance.</p>
+<p>Having <code>probe-rs</code> support gives us easy access to <a href="https://www.segger.com/products/debug-probes/j-link/technology/about-real-time-transfer/">RTT</a> for fast, low overhead logging. We have the <code>esp32c3</code> using RTT with <code>probe-rs</code> locally, however a few patches are required due to the <code>esp32c3</code>'s lack of atomics. Whilst we have contributed to crates such as <a href="https://github.com/embassy-rs/atomic-polyfill/pull/6">atomic-polyfill</a> these crates are quite intrusive and require other ecosystem crates to depend on them instead of <code>core::sync::atomic</code>. To combat this, we are in the process of writing an atomic emulation trap handler. This works by treating the <code>esp32c3</code> like it has atomic support (build as <code>riscv32imac-unknown-none-elf</code>), and when we trap on the atomic instructions, we decode them and emulate them in software transparently. There is a performance penalty that it is roughly 2-4x slower than native instructions based on our testing, but having an atomic story is important in the embedded Rust ecosystem.</p>
+<h2 id="what-s-next">What's next?</h2>
+<p>Continue to improve the tooling around Rust with Espressif chips, until we have out of the box solutions for most stories. Continue to build and polish standard library use with Espressif chips, as well as the <code>#![no_std]</code> story. We would also like to explore using <a href="https://github.com/rust-lang/rustc_codegen_gcc">rustc_codegen_gcc</a> to try and target Espressif's Xtensa chips. The end goal will still be to upstream the Xtensa backend to LLVM, but <code>rustc_codegen_gcc</code> may allow targeting Xtensa chips faster as GCC already has a stable Xtensa backend. </p>
+<p>Expect another update early next year!</p>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;rust&#x2F;">rust</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;espressif&#x2F;">espressif</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;esp32&#x2F;">esp32</a></span>
+		
+		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;llvm&#x2F;">llvm</a></span>
+		
+		
+	  </p>
+	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1199 Words</p>
+	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2021-10-18</p>
+	</footer>
+  </article>
+
+  
+  <div class="post-nav thin">
+	
+	
+	<a class="prev-post" href="https:&#x2F;&#x2F;mabez.dev&#x2F;blog&#x2F;posts&#x2F;esp-rust-espressif&#x2F;">
+	  <span class="post-nav-label">Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><br>
+	  <span>Rust on Espressif chips</span>
+	</a>
+	
+  </div>
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2021 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>
