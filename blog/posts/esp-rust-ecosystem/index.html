@@ -19,7 +19,11 @@
     href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon.ico"
   />
   <link rel="stylesheet" href="https:&#x2F;&#x2F;mabez.dev&#x2F;style.css"/>
-  <title>Scott Mabin</title>
+  
+  <title>Rust on the ESP32 &amp; ESP8266 - Building an ecosystem</title>
+  
+
+  
 
   <body id="page">
 
@@ -31,6 +35,7 @@
         <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
       </div>
       <nav class="site-nav hide-in-mobile">
+            
         
         <a href="https://mabez.dev/blog/posts">Blog</a>
         
@@ -103,10 +108,13 @@
 </span>
 </small>
 		
+            
 	  </div>
 	  <h1>Rust on the ESP32 &amp; ESP8266 - Building an ecosystem</h1>
 	</header>
+
 	<div class="content">
+        
 	  <p>Since my <a href="https://mabez.dev/blog/posts/esp32-rust-svd-pac/">last post, nearly 10 months ago</a> a lot has changed. For one, its not just me working on this any more! Community members are starting to contribute to the various ESP related projects. The extra help meant we have made considerable progress which I will now take you through in this post.</p>
 <h2 id="the-compiler">The compiler</h2>
 <p>I have been working on cleaning up the <code>rustc</code> work, including rebasing regularly to keep up with upstream rustc changes. Recently, I have cleaned up and extracted the patches required to enable <code>Xtensa</code> &amp; <code>esp</code> development with Rust, firstly to make it easier to rebase onto a newer version of the compiler, but also in the hopes of one day being able to submit these patches upstream when the <code>Xtensa</code> target is upstreamed in llvm. You can see the patchset <a href="https://github.com/MabezDev/rust-xtensa-patches">here</a>. On that note, it seems no progress has been made on that front in the last 9 months; whilst Espressif are doing a great job responding to issues and fixing bugs, it seems the patches are stuck in review in llvm. I'm unsure what directions to take to get more attention to this. </p>
@@ -114,9 +122,8 @@
 <h2 id="tooling-improvements">Tooling improvements</h2>
 <h3 id="cargo-espflash">cargo-espflash</h3>
 <p>For those of you not familiar with developing on ESP* platforms, there is a flashing tool <code>esptool.py</code> which will flash your program to the device. <a href="https://github.com/icewind1991">@icewind1991</a> began rewriting this tool in Rust, called <a href="https://github.com/esp-rs/espflash">espflash</a>. <a href="https://github.com/jessebraham">@jessebraham</a> then submitted <a href="https://github.com/esp-rs/espflash/pull/1">a PR which added a cargo interface</a> to it, meaning we can easily build and flash all in one go, for example building and flashing the blinky example in the ESP32 HAL:</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> cargo espflash</span><span style="color:#bf616a;"> --chip</span><span style="color:#c0c5ce;"> esp32</span><span style="color:#bf616a;"> --example</span><span style="color:#c0c5ce;"> blinky /dev/ttyUSB0
-</span></pre>
+<pre><code>$ cargo espflash --chip esp32 --example blinky /dev/ttyUSB0
+</code></pre>
 <p>It's really nice to invoke cargo once, make a coffee, and have your code running on the board when you get back! We've been adding more features to the tool, like reading back board info (flash size, CPU revision etc) in <a href="https://github.com/esp-rs/espflash/pull/3">#3</a>, and allowing faster flash speeds for the ESP32 in <a href="https://github.com/esp-rs/espflash/pull/5">#5</a>.</p>
 <h3 id="idf2svd">idf2svd</h3>
 <p><a href="https://github.com/jessebraham">@jessebraham</a> submitted a PR to <a href="https://github.com/MabezDev/idf2svd">idf2svd</a> to add support for generating ESP8266 SVD's, of which the esp8266-hal is built upon; <a href="https://mabez.dev/blog/posts/esp32-rust-svd-pac/">if you remeber back to the bonus section of my last post</a>, you will be able to use that SVD to debug ESP8266 applications too!</p>
@@ -149,6 +156,7 @@
 	</div>
 	<hr class="post-end">
 	<footer class="post-info">
+    
 	  <p>
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
 		
@@ -166,12 +174,15 @@
 		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;flash&#x2F;">flash</a></span>
 		
 		
-	  </p>
-	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1346 Words</p>
-	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2020-09-15</p>
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1346 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2020-09-15</p>
+    
 	</footer>
   </article>
-
+    
   
   <div class="post-nav thin">
 	
@@ -191,6 +202,8 @@
 	</a>
 	
   </div>
+
+  
 </main>
 
 	  </div>
@@ -203,8 +216,6 @@
   <p>&copy; 2021 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
   <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
 	
-	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
-	
   </p>
 </footer>
 
@@ -214,6 +225,22 @@
 	</div>
 	
 	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;copy.js"></script>
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+    
+    
 
 	
     <!-- Global Site Tag (gtag.js) - Google Analytics -->

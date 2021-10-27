@@ -21,9 +21,8 @@
 &lt;h2 id=&quot;tooling-improvements&quot;&gt;Tooling improvements&lt;&#x2F;h2&gt;
 &lt;h3 id=&quot;cargo-espflash&quot;&gt;cargo-espflash&lt;&#x2F;h3&gt;
 &lt;p&gt;For those of you not familiar with developing on ESP* platforms, there is a flashing tool &lt;code&gt;esptool.py&lt;&#x2F;code&gt; which will flash your program to the device. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;icewind1991&quot;&gt;@icewind1991&lt;&#x2F;a&gt; began rewriting this tool in Rust, called &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espflash&quot;&gt;espflash&lt;&#x2F;a&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;jessebraham&quot;&gt;@jessebraham&lt;&#x2F;a&gt; then submitted &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espflash&#x2F;pull&#x2F;1&quot;&gt;a PR which added a cargo interface&lt;&#x2F;a&gt; to it, meaning we can easily build and flash all in one go, for example building and flashing the blinky example in the ESP32 HAL:&lt;&#x2F;p&gt;
-&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
-&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; cargo espflash&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --chip&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; esp32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --example&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; blinky &#x2F;dev&#x2F;ttyUSB0
-&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;pre&gt;&lt;code&gt;$ cargo espflash --chip esp32 --example blinky &#x2F;dev&#x2F;ttyUSB0
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;It&#x27;s really nice to invoke cargo once, make a coffee, and have your code running on the board when you get back! We&#x27;ve been adding more features to the tool, like reading back board info (flash size, CPU revision etc) in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espflash&#x2F;pull&#x2F;3&quot;&gt;#3&lt;&#x2F;a&gt;, and allowing faster flash speeds for the ESP32 in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espflash&#x2F;pull&#x2F;5&quot;&gt;#5&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;idf2svd&quot;&gt;idf2svd&lt;&#x2F;h3&gt;
 &lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;jessebraham&quot;&gt;@jessebraham&lt;&#x2F;a&gt; submitted a PR to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;idf2svd&quot;&gt;idf2svd&lt;&#x2F;a&gt; to add support for generating ESP8266 SVD&#x27;s, of which the esp8266-hal is built upon; &lt;a href=&quot;https:&#x2F;&#x2F;mabez.dev&#x2F;blog&#x2F;posts&#x2F;esp32-rust-svd-pac&#x2F;&quot;&gt;if you remeber back to the bonus section of my last post&lt;&#x2F;a&gt;, you will be able to use that SVD to debug ESP8266 applications too!&lt;&#x2F;p&gt;
@@ -71,30 +70,29 @@
 &lt;h2 id=&quot;creating-the-esp32-peripheral-access-crate&quot;&gt;Creating the &lt;code&gt;esp32&lt;&#x2F;code&gt; peripheral access crate&lt;&#x2F;h2&gt;
 &lt;p&gt;The &lt;a href=&quot;http:&#x2F;&#x2F;www.keil.com&#x2F;pack&#x2F;doc&#x2F;CMSIS&#x2F;SVD&#x2F;html&#x2F;index.html&quot;&gt;SVD format&lt;&#x2F;a&gt; was created for ARM processors, but as it turns out it works very well for other processor architectures too. Espressif (unsuprisingly) don&#x27;t provide an SVD file, so I would have to create my own; but before I move on to that, what do we actually get from creating and SVD file for the ESP32? Well, it allows us to use &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-embedded&#x2F;svd2rust&quot;&gt;svd2rust&lt;&#x2F;a&gt; to generate really nice register access API&#x27;s. In the last post, all peripheral manipulation was achieved through seemingly random volatile writes at given addresses; of course this still needs to happen, but do we need to care about the address and bitshift values? svd2rust hides all of that behind a &lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&#x2F;svd2rust&#x2F;0.17.0&#x2F;svd2rust&#x2F;&quot;&gt;simple, well documented API&lt;&#x2F;a&gt; which makes developing higher level abstractions far simpler. For example, disabling the rtc watchdog looks like this: 
 &lt;&#x2F;p&gt;
-&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
-&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;disable_rtc_wdt&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;rtccntl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;esp32::RTCCNTL) {
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Disables write protection *&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;
-    rtccntl.wdtwprotect.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;write&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;w&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ w.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;bits&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;WDT_WKEY_VALUE&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) });
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Disables all wdt stages &amp;amp; the global watchdog flag itself *&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;
-    rtccntl.wdtconfig0.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;modify&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|_, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;w&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+&lt;pre&gt;&lt;code&gt;fn disable_rtc_wdt(rtccntl: &amp;amp;mut esp32::RTCCNTL) {
+    &#x2F;* Disables write protection *&#x2F;
+    rtccntl.wdtwprotect.write(|w| unsafe { w.bits(WDT_WKEY_VALUE) });
+    &#x2F;* Disables all wdt stages &amp;amp; the global watchdog flag itself *&#x2F;
+    rtccntl.wdtconfig0.modify(|_, w| unsafe {
         w
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wdt_stg0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;bits&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wdt_stg1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;bits&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wdt_stg2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;bits&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wdt_stg3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;bits&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wdt_flashboot_mod_en&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clear_bit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;wdt_en&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
-        .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clear_bit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
+        .wdt_stg0()
+        .bits(0x0)
+        .wdt_stg1()
+        .bits(0x0)
+        .wdt_stg2()
+        .bits(0x0)
+        .wdt_stg3()
+        .bits(0x0)
+        .wdt_flashboot_mod_en()
+        .clear_bit()
+        .wdt_en()
+        .clear_bit()
     });
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Re-enables write protection *&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;
-    rtccntl.wdtwprotect.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;write&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;w&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ w.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;bits&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0x0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) });
+    &#x2F;* Re-enables write protection *&#x2F;
+    rtccntl.wdtwprotect.write(|w| unsafe { w.bits(0x0) });
 }
-&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;Not a single address or bitshift in sight!&lt;&#x2F;p&gt;
 &lt;p&gt;To generate the initial SVD, the data has to come from somewhere. Intially @jeandudey put together an SVD including just the GPIO peripheral, but &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp32-hal&#x2F;pull&#x2F;2#issuecomment-565825098&quot;&gt;this approach would be a lot of work&lt;&#x2F;a&gt; to generate info for the entire chip. I decided to explore parsing the info from the esp-idf (Espressif&#x27;s C based HAL&#x2F;libs) code documentation, hence &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;idf2svd&quot;&gt;idf2svd&lt;&#x2F;a&gt; was born; it does a pretty good job of scraping 95%~ of the data we need but &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;MabezDev&#x2F;idf2svd&#x2F;issues&quot;&gt;there are still a few things&lt;&#x2F;a&gt; that could be improved.&lt;&#x2F;p&gt;
 &lt;p&gt;Fortunately a lot of the issues with the generated data can be fixed with the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;stm32-rs&#x2F;svdtools&quot;&gt;svd patching tool&lt;&#x2F;a&gt;, there have already been a few PR&#x27;s to fix missing peripherals that idf2svd &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp32&#x2F;pull&#x2F;8&quot;&gt;missed&lt;&#x2F;a&gt; or &lt;a href=&quot;(https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp32&#x2F;pull&#x2F;7)&quot;&gt;clean up register&lt;&#x2F;a&gt; and bitfield names. Any PR&#x27;s to clean up the SVD are very welcome!&lt;&#x2F;p&gt;
@@ -103,28 +101,28 @@
 &lt;p&gt;Getting it running with the ESP32 is actually pretty simple; instead of using the arm gdb we will be using &lt;code&gt;xtensa-esp32-elf-gdb&lt;&#x2F;code&gt; which we can get from downloading the &lt;a href=&quot;https:&#x2F;&#x2F;docs.espressif.com&#x2F;projects&#x2F;esp-idf&#x2F;en&#x2F;stable&#x2F;get-started&#x2F;index.html#setup-toolchain&quot;&gt;xtensa toolchain&lt;&#x2F;a&gt; from Espressif, along with their &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;openocd-esp32&quot;&gt;openocd server&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
 &lt;h3 id=&quot;configuration&quot;&gt;Configuration&lt;&#x2F;h3&gt;
 &lt;p&gt;Here is the example configuration taken from &lt;code&gt;xtensa-rust-quickstart&lt;&#x2F;code&gt;; its important to note that cortex-m debug expects the toolchain&#x27;s gdb to be called &lt;code&gt;arm-non-eabi-gdb&lt;&#x2F;code&gt; hence, where ever you specify the toolchain path there must be a file called &lt;code&gt;arm-none-eabi-gdb&lt;&#x2F;code&gt; else it won&#x27;t work. I chose to just symlink &lt;code&gt;xtensa-esp32-elf-gdb&lt;&#x2F;code&gt; to &lt;code&gt;arm-none-eabi-gdb&lt;&#x2F;code&gt; inside that directory.&lt;&#x2F;p&gt;
-&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
-&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; the config inside launch.json
-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;cwd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;${workspaceRoot}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;executable&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;target&#x2F;xtensa-esp32-none-elf&#x2F;debug&#x2F;esp32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;debug-with-svd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;request&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;attach&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;type&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;cortex-debug&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;servertype&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;openocd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;interface&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;jtag&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;* Download this from the latest &#96;esp32&#96; crate: https:&#x2F;&#x2F;docs.rs&#x2F;esp32&#x2F;latest&#x2F;esp32&#x2F; *&#x2F;
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;svdFile&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;svd&#x2F;esp32.svd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; complains about not allowed,
+&lt;pre&gt;&lt;code&gt;&#x2F;&#x2F; the config inside launch.json
+{
+    &amp;quot;cwd&amp;quot;: &amp;quot;${workspaceRoot}&amp;quot;,
+    &amp;quot;executable&amp;quot;: &amp;quot;target&#x2F;xtensa-esp32-none-elf&#x2F;debug&#x2F;esp32&amp;quot;,
+    &amp;quot;name&amp;quot;: &amp;quot;debug-with-svd&amp;quot;,
+    &amp;quot;request&amp;quot;: &amp;quot;attach&amp;quot;,
+    &amp;quot;type&amp;quot;: &amp;quot;cortex-debug&amp;quot;,
+    &amp;quot;servertype&amp;quot;: &amp;quot;openocd&amp;quot;,
+    &amp;quot;interface&amp;quot;: &amp;quot;jtag&amp;quot;,
+    &#x2F;* Download this from the latest &#96;esp32&#96; crate: https:&#x2F;&#x2F;docs.rs&#x2F;esp32&#x2F;latest&#x2F;esp32&#x2F; *&#x2F;
+    &amp;quot;svdFile&amp;quot;: &amp;quot;svd&#x2F;esp32.svd&amp;quot;,
+    &#x2F;&#x2F; complains about not allowed,
     &#x2F;&#x2F; but it does work.. https:&#x2F;&#x2F;github.com&#x2F;Marus&#x2F;cortex-debug&#x2F;issues&#x2F;111#issuecomment-504778053
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;serverpath&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;${env:HOME}&#x2F;programs&#x2F;openocd-esp32&#x2F;bin&#x2F;openocd&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; for this to work you will have to run &#96;ln -s xtensa-esp32-elf-gdb arm-none-eabi-gdb&#96;
-    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;toolchainPath&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;${env:HOME}&#x2F;programs&#x2F;xtensa-esp32-elf&#x2F;bin&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
-    &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;configFiles&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;: [
-        &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;openocd.cfg&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;
+    &amp;quot;serverpath&amp;quot;: &amp;quot;${env:HOME}&#x2F;programs&#x2F;openocd-esp32&#x2F;bin&#x2F;openocd&amp;quot;,
+    &#x2F;&#x2F; for this to work you will have to run &#96;ln -s xtensa-esp32-elf-gdb arm-none-eabi-gdb&#96;
+    &amp;quot;toolchainPath&amp;quot;: &amp;quot;${env:HOME}&#x2F;programs&#x2F;xtensa-esp32-elf&#x2F;bin&amp;quot;,
+    &amp;quot;configFiles&amp;quot;: [
+        &amp;quot;openocd.cfg&amp;quot;
     ],
 },
-&lt;&#x2F;span&gt;&lt;&#x2F;pre&gt;&lt;img style=&quot;width: 100%; height:auto&quot; src=&quot;&#x2F;debug-with-svd.png&quot;&#x2F;&gt;
+&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;img style=&quot;width: 100%; height:auto&quot; src=&quot;&#x2F;debug-with-svd.png&quot;&#x2F;&gt;
 It even shows you the processor register values!
 &lt;img style=&quot;width: 100%; height:auto&quot; src=&quot;&#x2F;xtensa-reg-display.png&quot;&#x2F;&gt;
 &lt;p&gt;The best part about this approach is that it&#x27;s language &amp;amp; framework agnostic, meaning if you use the esp-idf, the arduino core or anything else you can still use the SVD even if your not using Rust. Like I said earlier the SVD is still a little rough around the edges, so patches are very welcome!&lt;&#x2F;p&gt;

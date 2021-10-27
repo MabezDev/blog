@@ -19,7 +19,11 @@
     href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon.ico"
   />
   <link rel="stylesheet" href="https:&#x2F;&#x2F;mabez.dev&#x2F;style.css"/>
-  <title>Scott Mabin</title>
+  
+  <title>Rust on the ESP32 - SVD&#x27;s, PAC&#x27;s and USB flashing</title>
+  
+
+  
 
   <body id="page">
 
@@ -31,6 +35,7 @@
         <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
       </div>
       <nav class="site-nav hide-in-mobile">
+            
         
         <a href="https://mabez.dev/blog/posts">Blog</a>
         
@@ -103,10 +108,13 @@
 </span>
 </small>
 		
+            
 	  </div>
 	  <h1>Rust on the ESP32 - SVD&#x27;s, PAC&#x27;s and USB flashing</h1>
 	</header>
+
 	<div class="content">
+        
 	  <p>Since my <a href="https://mabez.dev/blog/posts/esp32-rust/">last post</a> I've been working on building the humble beginnings of an ecosystem around the ESP32 for Rust. The short version of this post is as follows:</p>
 <ul>
 <li><a href="https://github.com/MabezDev/xtensa-rust-quickstart/pull/4">This PR</a> means the quickstart repo can now flash and run code without a debugger! Simply using the <code>flash</code> or <code>flash_release</code> scripts will flash your code and begin running your code</li>
@@ -118,30 +126,29 @@
 <h2 id="creating-the-esp32-peripheral-access-crate">Creating the <code>esp32</code> peripheral access crate</h2>
 <p>The <a href="http://www.keil.com/pack/doc/CMSIS/SVD/html/index.html">SVD format</a> was created for ARM processors, but as it turns out it works very well for other processor architectures too. Espressif (unsuprisingly) don't provide an SVD file, so I would have to create my own; but before I move on to that, what do we actually get from creating and SVD file for the ESP32? Well, it allows us to use <a href="https://github.com/rust-embedded/svd2rust">svd2rust</a> to generate really nice register access API's. In the last post, all peripheral manipulation was achieved through seemingly random volatile writes at given addresses; of course this still needs to happen, but do we need to care about the address and bitshift values? svd2rust hides all of that behind a <a href="https://docs.rs/svd2rust/0.17.0/svd2rust/">simple, well documented API</a> which makes developing higher level abstractions far simpler. For example, disabling the rtc watchdog looks like this: 
 </p>
-<pre style="background-color:#2b303b;">
-<span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">disable_rtc_wdt</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">rtccntl</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">mut </span><span style="color:#c0c5ce;">esp32::RTCCNTL) {
-    </span><span style="color:#65737e;">/* Disables write protection */</span><span style="color:#c0c5ce;">
-    rtccntl.wdtwprotect.</span><span style="color:#96b5b4;">write</span><span style="color:#c0c5ce;">(|</span><span style="color:#bf616a;">w</span><span style="color:#c0c5ce;">| </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{ w.</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">WDT_WKEY_VALUE</span><span style="color:#c0c5ce;">) });
-    </span><span style="color:#65737e;">/* Disables all wdt stages &amp; the global watchdog flag itself */</span><span style="color:#c0c5ce;">
-    rtccntl.wdtconfig0.</span><span style="color:#96b5b4;">modify</span><span style="color:#c0c5ce;">(|_, </span><span style="color:#bf616a;">w</span><span style="color:#c0c5ce;">| </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{
+<pre><code>fn disable_rtc_wdt(rtccntl: &amp;mut esp32::RTCCNTL) {
+    /* Disables write protection */
+    rtccntl.wdtwprotect.write(|w| unsafe { w.bits(WDT_WKEY_VALUE) });
+    /* Disables all wdt stages &amp; the global watchdog flag itself */
+    rtccntl.wdtconfig0.modify(|_, w| unsafe {
         w
-        .</span><span style="color:#96b5b4;">wdt_stg0</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
-        .</span><span style="color:#96b5b4;">wdt_stg1</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
-        .</span><span style="color:#96b5b4;">wdt_stg2</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
-        .</span><span style="color:#96b5b4;">wdt_stg3</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">)
-        .</span><span style="color:#96b5b4;">wdt_flashboot_mod_en</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">clear_bit</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">wdt_en</span><span style="color:#c0c5ce;">()
-        .</span><span style="color:#96b5b4;">clear_bit</span><span style="color:#c0c5ce;">()
+        .wdt_stg0()
+        .bits(0x0)
+        .wdt_stg1()
+        .bits(0x0)
+        .wdt_stg2()
+        .bits(0x0)
+        .wdt_stg3()
+        .bits(0x0)
+        .wdt_flashboot_mod_en()
+        .clear_bit()
+        .wdt_en()
+        .clear_bit()
     });
-    </span><span style="color:#65737e;">/* Re-enables write protection */</span><span style="color:#c0c5ce;">
-    rtccntl.wdtwprotect.</span><span style="color:#96b5b4;">write</span><span style="color:#c0c5ce;">(|</span><span style="color:#bf616a;">w</span><span style="color:#c0c5ce;">| </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{ w.</span><span style="color:#96b5b4;">bits</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x0</span><span style="color:#c0c5ce;">) });
+    /* Re-enables write protection */
+    rtccntl.wdtwprotect.write(|w| unsafe { w.bits(0x0) });
 }
-</span></pre>
+</code></pre>
 <p>Not a single address or bitshift in sight!</p>
 <p>To generate the initial SVD, the data has to come from somewhere. Intially @jeandudey put together an SVD including just the GPIO peripheral, but <a href="https://github.com/esp-rs/esp32-hal/pull/2#issuecomment-565825098">this approach would be a lot of work</a> to generate info for the entire chip. I decided to explore parsing the info from the esp-idf (Espressif's C based HAL/libs) code documentation, hence <a href="https://github.com/MabezDev/idf2svd">idf2svd</a> was born; it does a pretty good job of scraping 95%~ of the data we need but <a href="https://github.com/MabezDev/idf2svd/issues">there are still a few things</a> that could be improved.</p>
 <p>Fortunately a lot of the issues with the generated data can be fixed with the <a href="https://github.com/stm32-rs/svdtools">svd patching tool</a>, there have already been a few PR's to fix missing peripherals that idf2svd <a href="https://github.com/esp-rs/esp32/pull/8">missed</a> or <a href="(https://github.com/esp-rs/esp32/pull/7)">clean up register</a> and bitfield names. Any PR's to clean up the SVD are very welcome!</p>
@@ -150,28 +157,28 @@
 <p>Getting it running with the ESP32 is actually pretty simple; instead of using the arm gdb we will be using <code>xtensa-esp32-elf-gdb</code> which we can get from downloading the <a href="https://docs.espressif.com/projects/esp-idf/en/stable/get-started/index.html#setup-toolchain">xtensa toolchain</a> from Espressif, along with their <a href="https://github.com/espressif/openocd-esp32">openocd server</a>.</p>
 <h3 id="configuration">Configuration</h3>
 <p>Here is the example configuration taken from <code>xtensa-rust-quickstart</code>; its important to note that cortex-m debug expects the toolchain's gdb to be called <code>arm-non-eabi-gdb</code> hence, where ever you specify the toolchain path there must be a file called <code>arm-none-eabi-gdb</code> else it won't work. I chose to just symlink <code>xtensa-esp32-elf-gdb</code> to <code>arm-none-eabi-gdb</code> inside that directory.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#65737e;">// the config inside launch.json
-</span><span style="color:#c0c5ce;">{
-    &quot;</span><span style="color:#a3be8c;">cwd</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">${workspaceRoot}</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">executable</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">target/xtensa-esp32-none-elf/debug/esp32</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">name</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">debug-with-svd</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">request</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">attach</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">type</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">cortex-debug</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">servertype</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">openocd</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">interface</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">jtag</span><span style="color:#c0c5ce;">&quot;,
-    </span><span style="color:#65737e;">/* Download this from the latest `esp32` crate: https://docs.rs/esp32/latest/esp32/ */
-    </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">svdFile</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">svd/esp32.svd</span><span style="color:#c0c5ce;">&quot;,
-    </span><span style="color:#65737e;">// complains about not allowed,
+<pre><code>// the config inside launch.json
+{
+    &quot;cwd&quot;: &quot;${workspaceRoot}&quot;,
+    &quot;executable&quot;: &quot;target/xtensa-esp32-none-elf/debug/esp32&quot;,
+    &quot;name&quot;: &quot;debug-with-svd&quot;,
+    &quot;request&quot;: &quot;attach&quot;,
+    &quot;type&quot;: &quot;cortex-debug&quot;,
+    &quot;servertype&quot;: &quot;openocd&quot;,
+    &quot;interface&quot;: &quot;jtag&quot;,
+    /* Download this from the latest `esp32` crate: https://docs.rs/esp32/latest/esp32/ */
+    &quot;svdFile&quot;: &quot;svd/esp32.svd&quot;,
+    // complains about not allowed,
     // but it does work.. https://github.com/Marus/cortex-debug/issues/111#issuecomment-504778053
-    </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">serverpath</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">${env:HOME}/programs/openocd-esp32/bin/openocd</span><span style="color:#c0c5ce;">&quot;,
-    </span><span style="color:#65737e;">// for this to work you will have to run `ln -s xtensa-esp32-elf-gdb arm-none-eabi-gdb`
-    </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">toolchainPath</span><span style="color:#c0c5ce;">&quot;: &quot;</span><span style="color:#a3be8c;">${env:HOME}/programs/xtensa-esp32-elf/bin</span><span style="color:#c0c5ce;">&quot;,
-    &quot;</span><span style="color:#a3be8c;">configFiles</span><span style="color:#c0c5ce;">&quot;: [
-        &quot;</span><span style="color:#a3be8c;">openocd.cfg</span><span style="color:#c0c5ce;">&quot;
+    &quot;serverpath&quot;: &quot;${env:HOME}/programs/openocd-esp32/bin/openocd&quot;,
+    // for this to work you will have to run `ln -s xtensa-esp32-elf-gdb arm-none-eabi-gdb`
+    &quot;toolchainPath&quot;: &quot;${env:HOME}/programs/xtensa-esp32-elf/bin&quot;,
+    &quot;configFiles&quot;: [
+        &quot;openocd.cfg&quot;
     ],
 },
-</span></pre><img style="width: 100%; height:auto" src="/debug-with-svd.png"/>
+</code></pre>
+<img style="width: 100%; height:auto" src="/debug-with-svd.png"/>
 It even shows you the processor register values!
 <img style="width: 100%; height:auto" src="/xtensa-reg-display.png"/>
 <p>The best part about this approach is that it's language &amp; framework agnostic, meaning if you use the esp-idf, the arduino core or anything else you can still use the SVD even if your not using Rust. Like I said earlier the SVD is still a little rough around the edges, so patches are very welcome!</p>
@@ -192,6 +199,7 @@ It even shows you the processor register values!
 	</div>
 	<hr class="post-end">
 	<footer class="post-info">
+    
 	  <p>
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
 		
@@ -205,12 +213,15 @@ It even shows you the processor register values!
 		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;svd&#x2F;">svd</a></span>
 		
 		
-	  </p>
-	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1167 Words</p>
-	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2020-01-13</p>
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1167 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2020-01-13</p>
+    
 	</footer>
   </article>
-
+    
   
   <div class="post-nav thin">
 	
@@ -230,6 +241,8 @@ It even shows you the processor register values!
 	</a>
 	
   </div>
+
+  
 </main>
 
 	  </div>
@@ -242,8 +255,6 @@ It even shows you the processor register values!
   <p>&copy; 2021 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
   <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
 	
-	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
-	
   </p>
 </footer>
 
@@ -253,6 +264,22 @@ It even shows you the processor register values!
 	</div>
 	
 	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;copy.js"></script>
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+    
+    
 
 	
     <!-- Global Site Tag (gtag.js) - Google Analytics -->

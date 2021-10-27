@@ -19,7 +19,11 @@
     href="https:&#x2F;&#x2F;mabez.dev&#x2F;favicon.ico"
   />
   <link rel="stylesheet" href="https:&#x2F;&#x2F;mabez.dev&#x2F;style.css"/>
-  <title>Scott Mabin</title>
+  
+  <title>Rust on the ESP32</title>
+  
+
+  
 
   <body id="page">
 
@@ -31,6 +35,7 @@
         <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
       </div>
       <nav class="site-nav hide-in-mobile">
+            
         
         <a href="https://mabez.dev/blog/posts">Blog</a>
         
@@ -103,10 +108,13 @@
 </span>
 </small>
 		
+            
 	  </div>
 	  <h1>Rust on the ESP32</h1>
 	</header>
+
 	<div class="content">
+        
 	  <p>About six months ago, I made a <a href="https://www.reddit.com/r/rust/comments/ar2d3r/espressif_have_finally_released_an_llvm_fork_this/">post on reddit</a> highlighting the launch of Espressif's llvm xtensa fork, not too long after, I had a working <code>rustc</code> toolchain capable of generating xtensa assembly. At this point I had to put this project to the side to finish my final year of university. Funnily enough I didn't stray too far, my final year project used Rust to create a <a href="https://github.com/MWatch">'smartwatch'</a> (I may write about this in the future, if anyone is interested). </p>
 <p>Since then I have seen a few posts utilising my fork to run Rust on the <a href="https://www.espressif.com/en/products/hardware/esp32/overview">ESP32</a> (<a href="https://dentrassi.de/2019/06/16/rust-on-the-esp-and-how-to-get-started/">see this great write up</a> by ctron, if you haven't already), most of which are building on top of <a href="https://github.com/espressif/esp-idf">esp-idf</a> which is written in C. In this post I'll be discussing the steps I took to generate valid binaries for the xtensa architecture with <code>rustc</code> and then write some <code>no_std</code> code to build a blinky program for the ESP32 only using Rust!</p>
 <h2 id="hacking-the-compiler">Hacking the compiler</h2>
@@ -114,103 +122,98 @@
 <p>The next step was to assemble and link the generated assembly. The llvm fork in it's current state cannot perform object generation, so we must use an external assembler. Luckily Rust allows us to do so by specifying the <code>linker_flavor</code> as <code>gcc</code> and providing a path to the linker with the <code>linker</code> target option, in this case <code>xtensa-esp32-elf-gcc</code>. After that I created a few built-in targets (which you can see <a href="https://github.com/MabezDev/rust-xtensa/blob/ad570c5cb999f62a03156286fdb5d3d1bbd0fb8b/src/librustc_target/spec/xtensa_esp32_none_elf.rs">here</a>); <code>xtensa-esp32-none-elf</code> for the ESP32; <code>xtensa-esp8266-none-elf</code> for the ESP8266; finally the <code>xtensa-unknown-none-elf</code> target for a generic xtensa target.</p>
 <h2 id="blinky-code">Blinky code</h2>
 <p>Now lets try and get a ESP32 board to blink the onboard LED using just Rust. First off, we need our basic program structure. The <code>xtensa_lx6_rt</code> crate does most of the heavy lifting in this respect, we simply need to define an entry point and the panic handler. Some of this may look vaguely familiar if you have any experience with <code>cortex-m</code> development on Rust, I've tried to mirror the API as best as I can.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#c0c5ce;">#![</span><span style="color:#bf616a;">no_std</span><span style="color:#c0c5ce;">]
-#![</span><span style="color:#bf616a;">no_main</span><span style="color:#c0c5ce;">]
+<pre><code>#![no_std]
+#![no_main]
 
 
-</span><span style="color:#b48ead;">use</span><span style="color:#c0c5ce;"> xtensa_lx6_rt as _;
+use xtensa_lx6_rt as _;
 
-</span><span style="color:#b48ead;">use </span><span style="color:#c0c5ce;">core::panic::PanicInfo;
+use core::panic::PanicInfo;
 
-</span><span style="color:#65737e;">/// Entry point - called by xtensa_lx6_rt after initialisation
-</span><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">no_mangle</span><span style="color:#c0c5ce;">]
-</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; ! {
-    </span><span style="color:#b48ead;">loop </span><span style="color:#c0c5ce;">{}
+/// Entry point - called by xtensa_lx6_rt after initialisation
+#[no_mangle]
+fn main() -&gt; ! {
+    loop {}
 }
 
-</span><span style="color:#65737e;">/// Simple panic handler
-</span><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">panic_handler</span><span style="color:#c0c5ce;">]
-</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">panic</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">_info</span><span style="color:#c0c5ce;">: &amp;PanicInfo) -&gt; ! {
-    </span><span style="color:#b48ead;">loop </span><span style="color:#c0c5ce;">{}
+/// Simple panic handler
+#[panic_handler]
+fn panic(_info: &amp;PanicInfo) -&gt; ! {
+    loop {}
 }
-</span></pre>
+</code></pre>
 <p>Now lets add some register definitions for the peripherals we want to use. For our blinky program, we will need to control the GPIO peripheral. In the ESP32 (and most modern processors) peripherals are mapped to memory adresses, commonly refered to as memory mapped peripherals. To control a peripheral we simply need to write values to the right addresses in memory, with respect to the reference manual supplied by the chip manufacturer.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#65737e;">/// GPIO output enable reg
-</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">GPIO_ENABLE_W1TS_REG</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">0x3FF44024</span><span style="color:#c0c5ce;">;
+<pre><code>/// GPIO output enable reg
+const GPIO_ENABLE_W1TS_REG: u32 = 0x3FF44024;
 
-</span><span style="color:#65737e;">/// GPIO output set register
-</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">GPIO_OUT_W1TS_REG</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">0x3FF44008</span><span style="color:#c0c5ce;">;
-</span><span style="color:#65737e;">/// GPIO output clear register
-</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">GPIO_OUT_W1TC_REG </span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">0x3FF4400C</span><span style="color:#c0c5ce;">;
+/// GPIO output set register
+const GPIO_OUT_W1TS_REG: u32 = 0x3FF44008;
+/// GPIO output clear register
+const GPIO_OUT_W1TC_REG : u32 = 0x3FF4400C;
 
-</span><span style="color:#65737e;">/// The GPIO hooked up to the onboard LED
-</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">BLINKY_GPIO</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">;
+/// The GPIO hooked up to the onboard LED
+const BLINKY_GPIO: u32 = 2;
 
-</span><span style="color:#65737e;">/// GPIO function mode
-</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">GPIO_FUNCX_OUT_BASE</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">0x3FF44530</span><span style="color:#c0c5ce;">;
-</span><span style="color:#b48ead;">const </span><span style="color:#d08770;">GPIO_FUNCX_OUT_SEL_CFG</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">GPIO_FUNCX_OUT_BASE </span><span style="color:#c0c5ce;">+ (</span><span style="color:#d08770;">BLINKY_GPIO </span><span style="color:#c0c5ce;">* </span><span style="color:#d08770;">4</span><span style="color:#c0c5ce;">);
-</span></pre>
+/// GPIO function mode
+const GPIO_FUNCX_OUT_BASE: u32 = 0x3FF44530;
+const GPIO_FUNCX_OUT_SEL_CFG: u32 = GPIO_FUNCX_OUT_BASE + (BLINKY_GPIO * 4);
+</code></pre>
 <p>Using these definitions it should be possible to change the gpio for your board<sup class="footnote-reference"><a href="#gpio_pin">1</a></sup> by changing the <code>BLINKY_GPIO</code>; for my board (NODEMCU ESP-32S) it was GPIO2.</p>
 <h3 id="initialisation">Initialisation</h3>
 <p>Next lets setup the pin as a GPIO output. For the ESP32, this is a two step process<sup class="footnote-reference"><a href="#gpio_pin">1</a></sup>. Firstly, its simply a case of setting a bit in the GPIO ouput enable register. Secondly the pin has to be configured in GPIO mode. There are not enough pins for all the possible peripherals in the chip, to combat this each pin can have multiple function modes. In the case of the ESP32, each pin has up to 256 different functions, although not all are mapped. To put the pin in GPIO mode, we need to put in mode 256 (0x100), we do this by writing to the function select register. After issuing those two register writes, we should be able to turn on the GPIO by setting the relevant bit inside the GPIO set register<sup class="footnote-reference"><a href="#2">2</a></sup>.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">no_mangle</span><span style="color:#c0c5ce;">]
-</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; ! {
+<pre><code>#[no_mangle]
+fn main() -&gt; ! {
 
-    </span><span style="color:#65737e;">// configure the pin as an output
-    </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{
-        core::ptr::write_volatile(</span><span style="color:#d08770;">GPIO_ENABLE_W1TS_REG </span><span style="color:#c0c5ce;">as </span><span style="color:#b48ead;">*mut </span><span style="color:#c0c5ce;">_, </span><span style="color:#d08770;">0x1 </span><span style="color:#c0c5ce;">&lt;&lt; </span><span style="color:#d08770;">BLINKY_GPIO</span><span style="color:#c0c5ce;">);
-        </span><span style="color:#65737e;">// 0x100 makes this pin a simple gpio pin - see the technical reference for more info
-        </span><span style="color:#c0c5ce;">core::ptr::write_volatile(</span><span style="color:#d08770;">GPIO_FUNCX_OUT_SEL_CFG </span><span style="color:#c0c5ce;">as </span><span style="color:#b48ead;">*mut </span><span style="color:#c0c5ce;">_, </span><span style="color:#d08770;">0x100</span><span style="color:#c0c5ce;">); 
+    // configure the pin as an output
+    unsafe {
+        core::ptr::write_volatile(GPIO_ENABLE_W1TS_REG as *mut _, 0x1 &lt;&lt; BLINKY_GPIO);
+        // 0x100 makes this pin a simple gpio pin - see the technical reference for more info
+        core::ptr::write_volatile(GPIO_FUNCX_OUT_SEL_CFG as *mut _, 0x100); 
     }
-    </span><span style="color:#65737e;">// turn on the LED
-    </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{
-        core::ptr::write_volatile(</span><span style="color:#d08770;">GPIO_OUT_W1TS_REG </span><span style="color:#c0c5ce;">as </span><span style="color:#b48ead;">*mut </span><span style="color:#c0c5ce;">_, </span><span style="color:#d08770;">0x1 </span><span style="color:#c0c5ce;">&lt;&lt; idx);           
+    // turn on the LED
+    unsafe {
+        core::ptr::write_volatile(GPIO_OUT_W1TS_REG as *mut _, 0x1 &lt;&lt; idx);           
     }
-    </span><span style="color:#b48ead;">loop </span><span style="color:#c0c5ce;">{}
+    loop {}
 }
-</span></pre><h3 id="delaying">Delaying</h3>
+</code></pre>
+<h3 id="delaying">Delaying</h3>
 <p>For the next stage of our blinky program, we need a way to delay; a simple approach could use <code>for</code> loop like so.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">delay</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">clocks</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32</span><span style="color:#c0c5ce;">) {
-    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> dummy_var: </span><span style="color:#b48ead;">u32 </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
-    </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">_ in </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">..clocks {
-        </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{ core::ptr::read_volatile(&amp;dummy_var) };
+<pre><code>pub fn delay(clocks: u32) {
+    let dummy_var: u32 = 0;
+    for _ in 0..clocks {
+        unsafe { core::ptr::read_volatile(&amp;dummy_var) };
     }
 }
-</span></pre>
+</code></pre>
 <p>We add the volatile read so that the compiler doesn't optimise our delay away. The problem with this approach is that depending of the optimisation level, the number of clock cycles each iteration of the loop changes. We need a cycle accurate way of delaying, fortunately the ESP32 has an internal clock counting register which can be accessed with the read special register <code>rsr</code> instruction. Now are delay function looks like this.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#65737e;">/// cycle accurate delay using the cycle counter register
-</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">delay</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">clocks</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">u32</span><span style="color:#c0c5ce;">) {
-    </span><span style="color:#65737e;">// NOTE: does not account for rollover
+<pre><code>/// cycle accurate delay using the cycle counter register
+pub fn delay(clocks: u32) {
+    // NOTE: does not account for rollover
     // ommitted: the asm to read the ccount
-    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> target = </span><span style="color:#96b5b4;">get_ccount</span><span style="color:#c0c5ce;">() + clocks;
-    </span><span style="color:#b48ead;">loop </span><span style="color:#c0c5ce;">{
-        </span><span style="color:#b48ead;">if </span><span style="color:#96b5b4;">get_ccount</span><span style="color:#c0c5ce;">() &gt; target {
-            </span><span style="color:#b48ead;">break</span><span style="color:#c0c5ce;">;
+    let target = get_ccount() + clocks;
+    loop {
+        if get_ccount() &gt; target {
+            break;
         }
     }
 }
-</span></pre>
+</code></pre>
 <p>Now we have cycle accurate counting we can delay for one second by waiting for the number of cycles the processor will do in one second. The default clock speed on most ESP boards is 40mhz, hence waiting for 40 million cycles equates to a one second delay.</p>
 <p>Bringing the snippets together and cleaning up the code into functions, we now have <code>main</code> that looks like this.</p>
-<pre style="background-color:#2b303b;">
-<span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">no_mangle</span><span style="color:#c0c5ce;">]
-</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; ! {
-    </span><span style="color:#65737e;">// configure the pin as an output
-    </span><span style="color:#96b5b4;">configure_pin_as_output</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">BLINKY_GPIO</span><span style="color:#c0c5ce;">);
+<pre><code>#[no_mangle]
+fn main() -&gt; ! {
+    // configure the pin as an output
+    configure_pin_as_output(BLINKY_GPIO);
 
-    </span><span style="color:#b48ead;">loop </span><span style="color:#c0c5ce;">{
-        </span><span style="color:#96b5b4;">set_led</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">BLINKY_GPIO</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">true</span><span style="color:#c0c5ce;">);
-        </span><span style="color:#96b5b4;">delay</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">CORE_HZ</span><span style="color:#c0c5ce;">);
-        </span><span style="color:#96b5b4;">set_led</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">BLINKY_GPIO</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">false</span><span style="color:#c0c5ce;">);
-        </span><span style="color:#96b5b4;">delay</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">CORE_HZ</span><span style="color:#c0c5ce;">);
+    loop {
+        set_led(BLINKY_GPIO, true);
+        delay(CORE_HZ);
+        set_led(BLINKY_GPIO, false);
+        delay(CORE_HZ);
     }
 }
-</span></pre>
+</code></pre>
 <p>After flashing to the board, and firing up our JTAG debugger<sup class="footnote-reference"><a href="#1">3</a></sup>, we are greeted with a blinking LED!</p>
 <p><video muted controls style="width: 100%; height:auto">
 <source src="/esp-rust-blinky.webm" type="video/mp4">
@@ -243,6 +246,7 @@
 	</div>
 	<hr class="post-end">
 	<footer class="post-info">
+    
 	  <p>
 		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
 		
@@ -254,12 +258,15 @@
 		<span class="tag"><a href="https:&#x2F;&#x2F;mabez.dev&#x2F;tags&#x2F;llvm&#x2F;">llvm</a></span>
 		
 		
-	  </p>
-	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1520 Words</p>
-	  <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2019-09-10</p>
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1520 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2019-09-10</p>
+    
 	</footer>
   </article>
-
+    
   
   <div class="post-nav thin">
 	
@@ -274,6 +281,8 @@
 	
 	
   </div>
+
+  
 </main>
 
 	  </div>
@@ -286,8 +295,6 @@
   <p>&copy; 2021 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
   <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
 	
-	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
-	
   </p>
 </footer>
 
@@ -297,6 +304,22 @@
 	</div>
 	
 	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;copy.js"></script>
+	
+	<script src="https:&#x2F;&#x2F;mabez.dev&#x2F;js&#x2F;main.js"></script>
+
+    
+    
 
 	
     <!-- Global Site Tag (gtag.js) - Google Analytics -->
