@@ -7,7 +7,79 @@
         <generator>Zola</generator>
         <language>en</language>
         <atom:link href="https://mabez.dev/rss.xml" rel="self" type="application/rss+xml"/>
-        <lastBuildDate>Mon, 18 Oct 2021 00:00:00 +0000</lastBuildDate>
+        <lastBuildDate>Mon, 10 Jan 2022 00:00:00 +0000</lastBuildDate>
+        <item>
+            <title>Rust on Espressif chips - 10-01-2022</title>
+            <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
+            <link>https://mabez.dev/blog/posts/esp-rust-10-01-2022/</link>
+            <guid>https://mabez.dev/blog/posts/esp-rust-10-01-2022/</guid>
+            <description>&lt;p&gt;This is the next quarterly update of esp-rs effort, detailing the progress over q4 2021.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;documentation&quot;&gt;Documentation&lt;&#x2F;h2&gt;
+&lt;p&gt;Feedback we have received over the last quarter has primarily been about documentation, or lack there of. We&#x27;ve been working hard on this, making multiple contributions to &lt;a href=&quot;https:&#x2F;&#x2F;esp-rs.github.io&#x2F;book&#x2F;&quot;&gt;the book&lt;&#x2F;a&gt; ourselves, as well as some community contributions too. We&#x27;re also working on documentation for the &lt;code&gt;esp-idf-*&lt;&#x2F;code&gt; based crates required for using the standard library; because the build process currently requires and internet connection to download esp-idf sources it&#x27;s not possible to host the docs on &lt;a href=&quot;https:&#x2F;&#x2F;docs.rs&quot;&gt;docs.rs&lt;&#x2F;a&gt;. I&#x27;ve recently opened &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-idf-sys&#x2F;pull&#x2F;50&quot;&gt;a PR to self host the documentation&lt;&#x2F;a&gt; until we can figure out a vendoring solution.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;standard-library&quot;&gt;Standard library&lt;&#x2F;h2&gt;
+&lt;p&gt;Bug fixes and incremental improvements to the standard library port have been rolling in. We have also been working on a new build approach, dubbed the &amp;quot;native&amp;quot; build. To explain why we are trying to switch the native build, I&#x27;ll explain how it currently works. The &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ivmarkov&#x2F;embuild&quot;&gt;embuild&lt;&#x2F;a&gt; project manages the download of sources, tools and patches before generating bindings and compiling the esp-idf project ready for use with Rust. The build step initially started using &lt;a href=&quot;https:&#x2F;&#x2F;platformio.org&#x2F;&quot;&gt;platformIO&lt;&#x2F;a&gt; (PIO) to build esp-idf, which worked great, there are a few caveats to this approach. PIO lags behind in chip support, for example with the new native approach the esp32s3 is now supported, however PIO does not yet support this. The new native approach uses esp-idf&#x27;s native cmake build system, specifically the cmake file APIs to interact and build esp-idf ready for use in Rust. This has the added advantage that we have control of both sides of the build process and can consider changes in esp-idf to make using it with Rust easier.&lt;&#x2F;p&gt;
+&lt;p&gt;One common question we receive is regarding the esp8266 and why there is no standard library support (please note that there &lt;strong&gt;is&lt;&#x2F;strong&gt; decent support for the esp8266 with bare metal Rust (no_std)). Unfortunately esp-idf does not support the esp8266, and instead is supported &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;ESP8266_RTOS_SDK&quot;&gt;a different project&lt;&#x2F;a&gt;. It is very possible to run the standard library on the esp8266, but will require some work implementing support like we did for esp-idf. It may be easier to add support for the esp8266 to esp-idf but we don&#x27;t have any plans of doing any of this at the moment.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;bare-metal&quot;&gt;Bare metal&lt;&#x2F;h2&gt;
+&lt;p&gt;The bare metal story has been a little quiet over the last quarter, with the main focus on the standard library effort &amp;amp; tooling. However, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;jessebraham&quot;&gt;@jessebraham&lt;&#x2F;a&gt; has started work on &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;jessebraham&#x2F;esp-hal&quot;&gt;esp-hal&lt;&#x2F;a&gt; which is set to be a combined bare metal HAL for Espressif chips! It&#x27;s in very early stages but already has a GPIO driver for the esp32 &amp;amp; esp32c3. Contributions are most welcome!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;atomic-story-for-the-esp32c3-no-std&quot;&gt;Atomic story for the esp32c3 (no_std)&lt;&#x2F;h2&gt;
+&lt;p&gt;In the last post I mentioned we were working on an atomic trap handler to emulate atomics for the esp32c3 for bare metal projects. We have now released it &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;riscv-atomic-emulation-trap&quot;&gt;under our Github organization&lt;&#x2F;a&gt; and it&#x27;s very simple to use, simply include this line in your application:&lt;&#x2F;p&gt;
+&lt;pre data-lang=&quot;rust&quot; style=&quot;background-color:#2b303b;color:#c0c5ce;&quot; class=&quot;language-rust &quot;&gt;&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;use&lt;&#x2F;span&gt;&lt;span&gt; riscv_atomic_emulation_trap as _;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It integrates seamlessly with the &lt;code&gt;riscv_rt&lt;&#x2F;code&gt; crate, meaning any other exceptions, or instructions that can&#x27;t be emulated are pushed to the &lt;code&gt;riscv_rt&lt;&#x2F;code&gt; exception handler. Last but by no means least, this will work for &lt;strong&gt;any&lt;&#x2F;strong&gt; RISC-V chip without atomic support&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;! Not just Espressif chips.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;probe-rs&quot;&gt;probe-rs&lt;&#x2F;h2&gt;
+&lt;p&gt;probe-rs support for the esp32c3 is relatively complete now. Most excitingly &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;Yatekii&quot;&gt;@Yatekii&lt;&#x2F;a&gt; wrote a driver for the on die USB JTAG peripheral inside the esp32c3! Meaning it&#x27;s possible to flash and debug a esp32c3 (and upcoming chips...) with just a USB cable! Best part is that all our fixes and changes have made it into the v0.14 release of probe-rs, so with the latest version installed you&#x27;re ready to debug &amp;amp; program a esp32c3! More details in the &lt;a href=&quot;https:&#x2F;&#x2F;esp-rs.github.io&#x2F;book&#x2F;&quot;&gt;the book&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;espflash&quot;&gt;espflash&lt;&#x2F;h2&gt;
+&lt;p&gt;espflash has seen a few minor releases since its 1.0 release in the last post, in which the following features and fixes have been included:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;CLI argument parsing was unified between &lt;code&gt;cargo-espflash&lt;&#x2F;code&gt; and &lt;code&gt;espflash&lt;&#x2F;code&gt;
+&lt;ul&gt;
+&lt;li&gt;Same subcommands and arguments available for both binaries (minus the build-related stuff for &lt;code&gt;espflash&lt;&#x2F;code&gt;)&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Support added for flashing the ESP32-S3&lt;&#x2F;li&gt;
+&lt;li&gt;Serial port auto-detection implemented
+&lt;ul&gt;
+&lt;li&gt;Optionally allows for a VID&#x2F;PID to be specified via config file&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;Various bugfixes and improvements:
+&lt;ul&gt;
+&lt;li&gt;Add &lt;code&gt;--package&lt;&#x2F;code&gt; and &lt;code&gt;--target&lt;&#x2F;code&gt; options&lt;&#x2F;li&gt;
+&lt;li&gt;Retry connections with different delays (for older ESP32 chips)&lt;&#x2F;li&gt;
+&lt;li&gt;Improved handling of custom partition tables&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;compiler&quot;&gt;Compiler&lt;&#x2F;h2&gt;
+&lt;p&gt;There is little to report on the compiler front, the main addition is the esp32s3 bare metal and std target. However, using Rust has been a great test bed for our LLVM fork supporting the Xtensa architecture and it has already brought a few code generation bugs to light which have been promptly fixed with patch releases to the LLVM fork. I&#x27;d also like to reiterate that we have prebuilt toolchains available with Xtensa support under the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust-build&quot;&gt;rust-build&lt;&#x2F;a&gt; repository, it is no longer required to build the compiler yourself. We have builds for:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;x86
+&lt;ul&gt;
+&lt;li&gt;Windows&lt;&#x2F;li&gt;
+&lt;li&gt;Linux&lt;&#x2F;li&gt;
+&lt;li&gt;MacOS&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;aarch64
+&lt;ul&gt;
+&lt;li&gt;MacOS (M1)&lt;&#x2F;li&gt;
+&lt;li&gt;Linux&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;what-s-next&quot;&gt;What&#x27;s next?&lt;&#x2F;h2&gt;
+&lt;p&gt;Our main goal are squashing bugs and documentation improvements. We also would like to start creating some more advanced examples to show off the progress we&#x27;ve made, if you have any projects you&#x27;re working on that please feel free to drop into &lt;a href=&quot;https:&#x2F;&#x2F;matrix.to&#x2F;#&#x2F;#esp-rs:matrix.org&quot;&gt;the matrix chat&lt;&#x2F;a&gt; and tell us all about it! If the project is open source we may also add it to our CI regression test so we (hopefully) won&#x27;t break your project in the future. I&#x27;d also like to take this time to thank all of our community contributors, we&#x27;ve made some awesome progress in the last two quarters thanks to your help!&lt;&#x2F;p&gt;
+&lt;br&#x2F;&gt;
+&lt;hr &#x2F;&gt;
+&lt;br&#x2F;&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;This hasn&#x27;t yet been tested on 64bit RISC-V.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;There is some missing tooling on the esp-idf side for Linux aarch64, please &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-idf-sys&#x2F;issues&#x2F;14&quot;&gt;track this issue&lt;&#x2F;a&gt; if you are interested.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</description>
+        </item>
         <item>
             <title>Rust on Espressif chips - 18-10-2021</title>
             <pubDate>Mon, 18 Oct 2021 00:00:00 +0000</pubDate>

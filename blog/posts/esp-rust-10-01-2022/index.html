@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https://mabez.dev/apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://mabez.dev/favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https://mabez.dev/favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https://mabez.dev/favicon.ico"
+  />
+  <link rel="stylesheet" href="https://mabez.dev/style.css"/>
+  
+  <title>Rust on Espressif chips - 10-01-2022</title>
+  
+
+  
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://mabez.dev/rss.xml">
+  
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jan 10, 2022</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  4 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Rust on Espressif chips - 10-01-2022</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>This is the next quarterly update of esp-rs effort, detailing the progress over q4 2021.</p>
+<h2 id="documentation">Documentation</h2>
+<p>Feedback we have received over the last quarter has primarily been about documentation, or lack there of. We've been working hard on this, making multiple contributions to <a href="https://esp-rs.github.io/book/">the book</a> ourselves, as well as some community contributions too. We're also working on documentation for the <code>esp-idf-*</code> based crates required for using the standard library; because the build process currently requires and internet connection to download esp-idf sources it's not possible to host the docs on <a href="https://docs.rs">docs.rs</a>. I've recently opened <a href="https://github.com/esp-rs/esp-idf-sys/pull/50">a PR to self host the documentation</a> until we can figure out a vendoring solution.</p>
+<h2 id="standard-library">Standard library</h2>
+<p>Bug fixes and incremental improvements to the standard library port have been rolling in. We have also been working on a new build approach, dubbed the &quot;native&quot; build. To explain why we are trying to switch the native build, I'll explain how it currently works. The <a href="https://github.com/ivmarkov/embuild">embuild</a> project manages the download of sources, tools and patches before generating bindings and compiling the esp-idf project ready for use with Rust. The build step initially started using <a href="https://platformio.org/">platformIO</a> (PIO) to build esp-idf, which worked great, there are a few caveats to this approach. PIO lags behind in chip support, for example with the new native approach the esp32s3 is now supported, however PIO does not yet support this. The new native approach uses esp-idf's native cmake build system, specifically the cmake file APIs to interact and build esp-idf ready for use in Rust. This has the added advantage that we have control of both sides of the build process and can consider changes in esp-idf to make using it with Rust easier.</p>
+<p>One common question we receive is regarding the esp8266 and why there is no standard library support (please note that there <strong>is</strong> decent support for the esp8266 with bare metal Rust (no_std)). Unfortunately esp-idf does not support the esp8266, and instead is supported <a href="https://github.com/espressif/ESP8266_RTOS_SDK">a different project</a>. It is very possible to run the standard library on the esp8266, but will require some work implementing support like we did for esp-idf. It may be easier to add support for the esp8266 to esp-idf but we don't have any plans of doing any of this at the moment.</p>
+<h2 id="bare-metal">Bare metal</h2>
+<p>The bare metal story has been a little quiet over the last quarter, with the main focus on the standard library effort &amp; tooling. However, <a href="https://github.com/jessebraham">@jessebraham</a> has started work on <a href="https://github.com/jessebraham/esp-hal">esp-hal</a> which is set to be a combined bare metal HAL for Espressif chips! It's in very early stages but already has a GPIO driver for the esp32 &amp; esp32c3. Contributions are most welcome!</p>
+<h2 id="atomic-story-for-the-esp32c3-no-std">Atomic story for the esp32c3 (no_std)</h2>
+<p>In the last post I mentioned we were working on an atomic trap handler to emulate atomics for the esp32c3 for bare metal projects. We have now released it <a href="https://github.com/esp-rs/riscv-atomic-emulation-trap">under our Github organization</a> and it's very simple to use, simply include this line in your application:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use</span><span> riscv_atomic_emulation_trap as _;
+</span></code></pre>
+<p>It integrates seamlessly with the <code>riscv_rt</code> crate, meaning any other exceptions, or instructions that can't be emulated are pushed to the <code>riscv_rt</code> exception handler. Last but by no means least, this will work for <strong>any</strong> RISC-V chip without atomic support<sup class="footnote-reference"><a href="#1">1</a></sup>! Not just Espressif chips.</p>
+<h2 id="probe-rs">probe-rs</h2>
+<p>probe-rs support for the esp32c3 is relatively complete now. Most excitingly <a href="https://github.com/Yatekii">@Yatekii</a> wrote a driver for the on die USB JTAG peripheral inside the esp32c3! Meaning it's possible to flash and debug a esp32c3 (and upcoming chips...) with just a USB cable! Best part is that all our fixes and changes have made it into the v0.14 release of probe-rs, so with the latest version installed you're ready to debug &amp; program a esp32c3! More details in the <a href="https://esp-rs.github.io/book/">the book</a>.</p>
+<h2 id="espflash">espflash</h2>
+<p>espflash has seen a few minor releases since its 1.0 release in the last post, in which the following features and fixes have been included:</p>
+<ul>
+<li>CLI argument parsing was unified between <code>cargo-espflash</code> and <code>espflash</code>
+<ul>
+<li>Same subcommands and arguments available for both binaries (minus the build-related stuff for <code>espflash</code>)</li>
+</ul>
+</li>
+<li>Support added for flashing the ESP32-S3</li>
+<li>Serial port auto-detection implemented
+<ul>
+<li>Optionally allows for a VID/PID to be specified via config file</li>
+</ul>
+</li>
+<li>Various bugfixes and improvements:
+<ul>
+<li>Add <code>--package</code> and <code>--target</code> options</li>
+<li>Retry connections with different delays (for older ESP32 chips)</li>
+<li>Improved handling of custom partition tables</li>
+</ul>
+</li>
+</ul>
+<h2 id="compiler">Compiler</h2>
+<p>There is little to report on the compiler front, the main addition is the esp32s3 bare metal and std target. However, using Rust has been a great test bed for our LLVM fork supporting the Xtensa architecture and it has already brought a few code generation bugs to light which have been promptly fixed with patch releases to the LLVM fork. I'd also like to reiterate that we have prebuilt toolchains available with Xtensa support under the <a href="https://github.com/esp-rs/rust-build">rust-build</a> repository, it is no longer required to build the compiler yourself. We have builds for:</p>
+<ul>
+<li>x86
+<ul>
+<li>Windows</li>
+<li>Linux</li>
+<li>MacOS</li>
+</ul>
+</li>
+<li>aarch64
+<ul>
+<li>MacOS (M1)</li>
+<li>Linux<sup class="footnote-reference"><a href="#2">2</a></sup></li>
+</ul>
+</li>
+</ul>
+<h2 id="what-s-next">What's next?</h2>
+<p>Our main goal are squashing bugs and documentation improvements. We also would like to start creating some more advanced examples to show off the progress we've made, if you have any projects you're working on that please feel free to drop into <a href="https://matrix.to/#/#esp-rs:matrix.org">the matrix chat</a> and tell us all about it! If the project is open source we may also add it to our CI regression test so we (hopefully) won't break your project in the future. I'd also like to take this time to thank all of our community contributors, we've made some awesome progress in the last two quarters thanks to your help!</p>
+<br/>
+<hr />
+<br/>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>This hasn't yet been tested on 64bit RISC-V.</p>
+</div>
+<div class="footnote-definition" id="2"><sup class="footnote-definition-label">2</sup>
+<p>There is some missing tooling on the esp-idf side for Linux aarch64, please <a href="https://github.com/esp-rs/esp-idf-sys/issues/14">track this issue</a> if you are interested.</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://mabez.dev/tags/rust/">rust</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/espressif/">espressif</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/esp32/">esp32</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1075 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2022-01-10</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+	<a class="prev-post" href="https:&#x2F;&#x2F;mabez.dev&#x2F;blog&#x2F;posts&#x2F;esp-rust-18-10-2021&#x2F;">
+	  <span class="post-nav-label">Older&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-right"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></span><br>
+	  <span>Rust on Espressif chips - 18-10-2021</span>
+	</a>
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2022 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https://mabez.dev/js/copy.js"></script>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+    
+    
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>
