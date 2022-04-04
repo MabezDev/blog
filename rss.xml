@@ -7,7 +7,66 @@
         <generator>Zola</generator>
         <language>en</language>
         <atom:link href="https://mabez.dev/rss.xml" rel="self" type="application/rss+xml"/>
-        <lastBuildDate>Mon, 10 Jan 2022 00:00:00 +0000</lastBuildDate>
+        <lastBuildDate>Mon, 04 Apr 2022 00:00:00 +0000</lastBuildDate>
+        <item>
+            <title>Rust on Espressif chips - 04-04-2022</title>
+            <pubDate>Mon, 04 Apr 2022 00:00:00 +0000</pubDate>
+            <link>https://mabez.dev/blog/posts/esp-rust-04-04-2022/</link>
+            <guid>https://mabez.dev/blog/posts/esp-rust-04-04-2022/</guid>
+            <description>&lt;p&gt;This is the next quarterly update of esp-rs effort, detailing the progress over Q1 2022.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;standard-library&quot;&gt;Standard library&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;build-system-changes&quot;&gt;Build system changes&lt;&#x2F;h3&gt;
+&lt;p&gt;The last post mentioned we were moving towards using the built-in esp-idf build system to compile esp-idf (dubbed &amp;quot;native&amp;quot; build) instead of PlatformIO. I&#x27;m happy to announce we have completed this step, going forward the native approach is the default, and platformIO is opt-in via the &lt;code&gt;pio&lt;&#x2F;code&gt; feature of &lt;code&gt;esp-idf-sys&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;new-default-version&quot;&gt;New default version&lt;&#x2F;h3&gt;
+&lt;p&gt;The default esp-idf version we target in the Rust world was v4.3 (note that this can be configured on a per-project basis), we have now bumped this to now default to v4.4. Version 4.4 has some quality of life fixes, as well as some features.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Atomic Emulation up to 64 bits for &lt;code&gt;espidf&lt;&#x2F;code&gt; targets - &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust&#x2F;issues&#x2F;107&quot;&gt;esp-rs&#x2F;rust#107&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;realpath&lt;&#x2F;code&gt; implementation to get usable panic messages for &lt;code&gt;espidf&lt;&#x2F;code&gt; targets.&lt;&#x2F;li&gt;
+&lt;li&gt;Toolchain update to support developing on Windows - &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;esp-idf&#x2F;issues&#x2F;7864&quot;&gt;espressif&#x2F;esp-idf#7864&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;compiler-xtensa-code-generation&quot;&gt;Compiler &amp;amp; Xtensa code generation&lt;&#x2F;h3&gt;
+&lt;p&gt;Rust has been a good stress test for the Xtensa LLVM backend. We&#x27;ve spotted a few bugs over the last quarter which are important to squash as eventually esp-idf will be compiled with clang instead of GCC (Hopefully by that time, &lt;code&gt;clang&lt;&#x2F;code&gt; will be available as a &lt;code&gt;rustup&lt;&#x2F;code&gt; &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;issues&#x2F;56371&quot;&gt;component&lt;&#x2F;a&gt;). We have also fixed a few issues with our standard library port.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;LLVM compilation error when optimizing loops for the hardware loop assistance registers of the esp32 - &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust&#x2F;issues&#x2F;95&quot;&gt;esp-rs&#x2F;rust#95&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;LLVM atomic swap code generation broken on Xtensa targets for atomics smaller than 32 bits - &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust&#x2F;issues&#x2F;106&quot;&gt;esp-rs&#x2F;rust#106&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Add implementations for &lt;code&gt;lstat&lt;&#x2F;code&gt; &amp;amp; &lt;code&gt;ftruncate&lt;&#x2F;code&gt; in esp-idf - &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust&#x2F;issues&#x2F;100&quot;&gt;esp-rs&#x2F;rust#100&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Fix the size of certain c types for &lt;code&gt;espidf&lt;&#x2F;code&gt; targets such that &lt;code&gt;stat&lt;&#x2F;code&gt; works correctly - &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust&#x2F;issues&#x2F;92&quot;&gt;esp-rs&#x2F;rust#92&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;bare-metal&quot;&gt;Bare metal&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;goodbye-esp-rs-esp32-hal-hello-esp-rs-esp-hal&quot;&gt;Goodbye esp-rs&#x2F;esp32-hal, hello esp-rs&#x2F;esp-hal&lt;&#x2F;h3&gt;
+&lt;p&gt;The new &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&quot;&gt;esp-hal&lt;&#x2F;a&gt; is coming along very well, it already has support for GPIO, TIMG, UART, I2C, SPI, and RNG for esp32, esp32s2, esp32s3, and esp32c3. Please see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;issues&#x2F;19&quot;&gt;this tracking issue&lt;&#x2F;a&gt; to see the chip support status. This multi-chip HAL is now using the official SVDs from Espressif instead of the hacked together SVD used in the original esp32 peripheral access crate (PAC), see the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-pacs&quot;&gt;esp-rs&#x2F;esp-pacs&lt;&#x2F;a&gt; repository. We&#x27;ve added a quick start template repository &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-template&quot;&gt;esp-rs&#x2F;esp-template&lt;&#x2F;a&gt; to get started with the new bare metal HAL.&lt;&#x2F;p&gt;
+&lt;p&gt;The original HAL for the esp32 is now in maintenance mode, and will soon be deprecated once all drivers are ported to the new multi-chip HAL. There is still a number of drivers to be ported to the new HAL. Porting them would be a good first issue for anyone interested as the implementation would mostly stay the same, just a few API &amp;amp; type changes. Please see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp32-hal&#x2F;issues&#x2F;80&quot;&gt;this issue&lt;&#x2F;a&gt; if you want to help out.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;preliminary-wifi-support&quot;&gt;Preliminary WiFi support&lt;&#x2F;h3&gt;
+&lt;p&gt;This is something I&#x27;m personally very excited about. We&#x27;ve had WiFi support for the standard library (&lt;code&gt;espidf&lt;&#x2F;code&gt;) targets for a long while now, but just recently we&#x27;ve managed to get WiFi going in pure Rust&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;! It&#x27;s possible to &lt;code&gt;scan&lt;&#x2F;code&gt; for Access Points (APs) and connect to an AP, and use &lt;code&gt;smoltcp&lt;&#x2F;code&gt; to talk over the network! Check out the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;bjoernQ&#x2F;esp32c3-wifi-rs&#x2F;blob&#x2F;main&#x2F;examples&#x2F;dhcp.rs&quot;&gt;dhcp example&lt;&#x2F;a&gt;. The repository is currently in a proof of concept state and can be found &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;bjoernQ&#x2F;esp32c3-wifi-rs&quot;&gt;here&lt;&#x2F;a&gt;. It will be moved into the &lt;code&gt;esp-rs&lt;&#x2F;code&gt; org once we clean it up and add xtensa support.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tooling&quot;&gt;Tooling&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;espflash&quot;&gt;espflash&lt;&#x2F;h3&gt;
+&lt;p&gt;Since the last post we have released 1.3.0 and the 1.4.0 release is due to be published very soon which boasts some great features and fixes.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Better partition table support. We now properly handle partitions other than &lt;code&gt;factory&lt;&#x2F;code&gt; (OTA, etc).&lt;&#x2F;li&gt;
+&lt;li&gt;USB Serial JTAG support. It&#x27;s now possible to flash over the serial part of onboard the USB Serial JTAG peripheral.&lt;&#x2F;li&gt;
+&lt;li&gt;The ability to modify firmware header via the command line. Configure custom flash sizes, flash speeds, and flash modes.&lt;&#x2F;li&gt;
+&lt;li&gt;Use &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espmonitor&quot;&gt;&lt;code&gt;espmonitor&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; as the &lt;code&gt;--monitor&lt;&#x2F;code&gt; inside &lt;code&gt;espflash&lt;&#x2F;code&gt;. &lt;code&gt;espmonitor&lt;&#x2F;code&gt; can decode addresses to source functions, providing a stack trace on abort over the serial port.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;github-actions&quot;&gt;Github actions&lt;&#x2F;h3&gt;
+&lt;p&gt;Want to test your Xtensa based projects in CI? We recently released &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;xtensa-toolchain&quot;&gt;xtensa-toolchain&lt;&#x2F;a&gt;, a Github action for installing our forked Rust compiler with Xtensa support. Instructions on how to use can be found &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;marketplace&#x2F;actions&#x2F;rust-toolchain-for-xtensa&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;esp-rs-devcontainer-for-visual-studio-code&quot;&gt;esp-rs devcontainer for Visual Studio Code&lt;&#x2F;h3&gt;
+&lt;p&gt;To target Xtensa based chips (esp32, esp32s2, esp32s3, etc) we need a custom rust compiler, with a custom LLVM backend for Xtensa. This adds some friction to getting started with Xtensa based chips. We &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust-build&quot;&gt;already offer scripts&lt;&#x2F;a&gt; to download pre-built compiler toolchains, but we are happy to announce &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;SergioGasquez&#x2F;esp-rs-devcontainer&quot;&gt;esp-rs-devcontainer&lt;&#x2F;a&gt;. This integrates into Visual Studio Code using the remote containers feature, allowing easy setup for developers already familiar with containers. Please see the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;SergioGasquez&#x2F;esp-rs-devcontainer#setup&quot;&gt;setup section&lt;&#x2F;a&gt; for supported configurations and initialization steps.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;community&quot;&gt;Community&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;the-esp-rust-board&quot;&gt;The ESP Rust Board&lt;&#x2F;h3&gt;
+&lt;p&gt;We&#x27;ve developed an open source development board with a focus on being ready for Rust development! It&#x27;s based on the RISCV esp32c3, so a standard Rust compiler will work. Whilst the boards are not yet on sale, the source files are available &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-rust-board&quot;&gt;here&lt;&#x2F;a&gt; if you want to build one yourself.&lt;&#x2F;p&gt;
+&lt;img style=&quot;width: 100%; height:auto&quot; src=&quot;&#x2F;rust_board_v1_pin-layout.png&quot;&#x2F;&gt;
+&lt;h3 id=&quot;ferrous-training&quot;&gt;Ferrous training&lt;&#x2F;h3&gt;
+&lt;p&gt;We have collaborated with Ferrous Systems to produce a training workshop to help teach developers how to get productive with Rust on Espressif chips! Please see the &lt;a href=&quot;https:&#x2F;&#x2F;www.espressif.com&#x2F;en&#x2F;news&#x2F;ESP_RUST_training&quot;&gt;newsletter release&lt;&#x2F;a&gt; for the full details.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;what-s-next&quot;&gt;What&#x27;s next?&lt;&#x2F;h2&gt;
+&lt;p&gt;Continue the rapid progress on the bare metal multi-chip HAL, &lt;code&gt;esp-hal&lt;&#x2F;code&gt; and add bare metal WiFi support for Xtensa chips. The esp-idf series of crates are starting to stabilize however, there are still plenty of drivers and libraries not yet covered by nice Rust abstractions, so lots still to do here!&lt;&#x2F;p&gt;
+&lt;br&#x2F;&gt;
+&lt;hr &#x2F;&gt;
+&lt;br&#x2F;&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;The WiFi binary blobs are not written in Rust&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</description>
+        </item>
         <item>
             <title>Rust on Espressif chips - 10-01-2022</title>
             <pubDate>Mon, 10 Jan 2022 00:00:00 +0000</pubDate>
