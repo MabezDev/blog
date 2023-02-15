@@ -14,7 +14,7 @@ jobs:
 
       - name: Install and Build 🔧
         run: |
-          curl -s -L https://github.com/getzola/zola/releases/download/v0.14.1/zola-v0.14.1-x86_64-unknown-linux-gnu.tar.gz | sudo tar xvzf - -C /usr/local/bin
+          curl -s -L https://github.com/getzola/zola/releases/download/v0.16.1/zola-v0.16.1-x86_64-unknown-linux-gnu.tar.gz | sudo tar xvzf - -C /usr/local/bin
           zola build
 
       - name: Deploy 🚀
