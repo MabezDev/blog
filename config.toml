@@ -1,4 +1,3 @@
-# The URL the site will be built for
 base_url = "https://mabez.dev"
 
 # Used in RSS by default
@@ -24,13 +23,17 @@ taxonomies = [
 ]
 
 [markdown]
+render_emoji = true
 # Highlight all code blocks found
 highlight_code = true
-
 # Which theme to use for the code highlighting.
 # See below for list of accepted values
 # highlight_theme = "visual-studio-dark"
 highlight_theme = "base16-ocean-dark"
+
+[link_checker]
+internal_level = "error"
+external_level = "warn"
 
 [extra]
 home_subtitle = ""
