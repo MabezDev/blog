@@ -1,4 +1,4 @@
 [submodule "themes/hermit_zola"]
 	path = themes/hermit_zola
-	url = https://github.com/MabezDev/hermit_zola
-	branch = use-page-title-when-avaiable
+	url = https://github.com/VersBinarii/hermit_zola
+	branch = master
