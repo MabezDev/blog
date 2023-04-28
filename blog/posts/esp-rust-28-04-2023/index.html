@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https://mabez.dev/apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://mabez.dev/favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https://mabez.dev/favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https://mabez.dev/favicon.ico"
+  />
+  <link rel="stylesheet" href="https://mabez.dev/style.css"/>
+  
+  <title>Rust on Espressif chips - 28-04-2023</title>
+  
+
+  
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://mabez.dev/rss.xml">
+  
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Apr 28, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  7 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Rust on Espressif chips - 28-04-2023</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>This is the next quarterly update of esp-rs effort, detailing the progress over Q1 2023.</p>
+<h2 id="rust-compiler-llvm">Rust Compiler &amp; LLVM</h2>
+<p>We have fixed several issues in the LLVM Xtensa backend, mainly relating to the hardware loop optimization feature used on the ESP32 and ESP32-S3 chips <a href="https://github.com/esp-rs/rust/issues/161">#161</a> <a href="https://github.com/esp-rs/rust/issues/164">#164</a>. We spotted an issue with the 1.67 release where debug builds no longer worked on the ESP32, however, this turned out to be a linker script issue in esp-hal <a href="https://github.com/esp-rs/rust/issues/158">#158</a>.</p>
+<p>In the last post, we mentioned that the first 10 LLVM Xtensa patches had been committed upstream, since then we have been preparing the next set and now have 20 patches in review upstream. You can track the progress, as well as review the patches <a href="https://github.com/espressif/llvm-project/issues/4#issuecomment-1485724130">here</a>.</p>
+<h2 id="esp-hal-no-std">esp-hal - no_std</h2>
+<p>First, there were updates to the <code>embedded-hal-async</code> and <code>embassy-*</code> dependencies, as well as an update to <code>embedded-hal@1.0.0-alpha.10</code> and <code>embedded-hal-nb@1.0.0-alpha.2</code>, bringing in the latest changes and improvements from the embedded-hal ecosystem <a href="https://github.com/esp-rs/esp-hal/pull/488">#488</a> <a href="https://github.com/esp-rs/esp-hal/pull/487">#487</a>.</p>
+<p>Initial ESP32-H2 support was added with <a href="https://github.com/esp-rs/esp-hal/pull/482">#482</a> with the addition of soc/efuse methods in <a href="https://github.com/esp-rs/esp-hal/pull/486">#486</a>. Debug assist support was added to aid in debugging stack overflow issues <a href="https://github.com/esp-rs/esp-hal/pull/484">#484</a>. Additional updates were made to fix comparison errors, decoding of wakeup cause using bitflags, as well as adding support for the RSA peripheral <a href="https://github.com/esp-rs/esp-hal/pull/473">#473</a> <a href="https://github.com/esp-rs/esp-hal/pull/472">#472</a> <a href="https://github.com/esp-rs/esp-hal/pull/467">#467</a>.</p>
+<p>Improvements were made to the linker scripts, documentation, and clock control for peripherals such as <code>timg</code>, <code>wdt</code>, <code>sha</code>, <code>usb-serial-jtag</code>, and <code>uart</code> <a href="https://github.com/esp-rs/esp-hal/pull/470">#470</a> <a href="https://github.com/esp-rs/esp-hal/pull/463">#463</a> <a href="https://github.com/esp-rs/esp-hal/pull/461">#461</a>. Fixes were made to clock enabling for ESP32-C6 and 802.15.4 clock enabling for ESP32-C6 <a href="https://github.com/esp-rs/esp-hal/pull/458">#458</a>.</p>
+<p>Updates were made to the PACs (Peripheral Access Crates) to the latest versions, and the <code>esp-hal-smartled</code> package was extracted and CI checks were added for it <a href="https://github.com/esp-rs/esp-hal/pull/447">#447</a> <a href="https://github.com/esp-rs/esp-hal/pull/436">#436</a> <a href="https://github.com/esp-rs/esp-hal/pull/429">#429</a>. Other changes included fixing warnings, cleaning up the RTC driver, removing r0 dependency, and unifying linker scripts for better organization and maintenance <a href="https://github.com/esp-rs/esp-hal/pull/440">#440</a> <a href="https://github.com/esp-rs/esp-hal/pull/439">#439</a> <a href="https://github.com/esp-rs/esp-hal/pull/443">#443</a>.</p>
+<h2 id="esp-wifi-no-std">esp-wifi - no_std</h2>
+<p>We have made significant progress in enhancing packet dumps <a href="https://github.com/esp-rs/esp-wifi/pull/165">#165</a> and using a more reasonable default MTU, as well as incorporating features to change MTU <a href="https://github.com/esp-rs/esp-wifi/pull/164">#164</a>. Additionally, we have implemented async BLE functionality <a href="https://github.com/esp-rs/esp-wifi/pull/161">#161</a> and added missing ROM functions for ESP32-S3/ESP32-S2 support <a href="https://github.com/esp-rs/esp-wifi/pull/160">#160</a>.</p>
+<p>We now utilize types from <code>core::ffi::</code> since they have been stabilized <a href="https://github.com/esp-rs/esp-wifi/pull/159">#159</a> and incorporated the use of HAL's radio clock control <a href="https://github.com/esp-rs/esp-wifi/pull/153">#153</a>. We have also refactored <code>Socket::write</code> to prevent infinite loops during long writes <a href="https://github.com/esp-rs/esp-wifi/pull/151">#151</a> and updated examples for better organization and clarity <a href="https://github.com/esp-rs/esp-wifi/pull/146">#146</a>.</p>
+<p>In terms of new features, we have added support for ESP32-C6 WiFi <a href="https://github.com/esp-rs/esp-wifi/pull/142">#142</a>, implemented basic AP functionality <a href="https://github.com/esp-rs/esp-wifi/pull/134">#134</a>, and incorporated ESP-NOW support <a href="https://github.com/esp-rs/esp-wifi/pull/121">#121</a>. We have also made improvements to asynchronous WiFi functionality, including <code>connect/disconnect/scan/wait_for_event</code> capabilities <a href="https://github.com/esp-rs/esp-wifi/pull/129">#129</a> and fixed a bug ensuring that internal WiFi buffers are properly freed <a href="https://github.com/esp-rs/esp-wifi/pull/128">#128</a>.</p>
+<p>Furthermore, we have made updates to dependencies, such as upgrading to Smoltcp 0.9 <a href="https://github.com/esp-rs/esp-wifi/pull/124">#124</a>, and reorganizing low-level bindings into a separate package for better modularity <a href="https://github.com/esp-rs/esp-wifi/pull/117">#117</a>. We have also addressed various bug fixes and optimizations, including disabling LTO for improved performance <a href="https://github.com/esp-rs/esp-wifi/pull/116">#116</a> and refactoring the WiFi device for better code structure <a href="https://github.com/esp-rs/esp-wifi/pull/115">#115</a>.</p>
+<h2 id="tls-no-std">TLS - no_std</h2>
+<p>The standard library has had TLS support for a while, but it's not flawless. However, we lacked TLS support for no_std applications. While we're enthusiastic about the potential of the <a href="https://github.com/drogue-iot/embedded-tls">embedded-tls</a> crate, it's not yet suitable for widespread use. As a substitute, we created <a href="https://github.com/esp-rs/esp-mbedtls">esp-mbedtls</a>, a crate for using MbedTLS on ESP32s in no_std applications.</p>
+<h2 id="esp-idf-std">esp-idf - std</h2>
+<p>Over the past quarter, we have been busy improving the functionality and usability of the esp-idf-hal library. We fixed thread priority with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/235">#235</a>, and improved our CI with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/226">#226</a>. Additionally, we added an <code>spi::config::BitOrder</code> enum to make SPI configuration more flexible with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/222">#222</a>.</p>
+<p>We also implemented several new features, such as setting the <code>LedcTimerDriver</code> frequency with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/219">#219</a>, and implementing async Wait traits from embedded-hal-async with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/218">#218</a>. We also added alerts and modes support for TWAI with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/216">#216</a>, and implemented a general purpose delay provider with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/210">#210</a>.</p>
+<p>Finally, we made several improvements to existing functionality, including allowing setting a timeout for i2c to accommodate devices with longer clock stretching with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/211">#211</a>, and changing the LEDC Clock enum name/typedef in esp-idf master with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/208">#208</a>. We also implemented PCNT for the v4 esp-idf api (which will work for v5 with v4 api) with pull request <a href="https://github.com/esp-rs/esp-idf-hal/pull/157">#157</a>.</p>
+<h2 id="tooling">Tooling</h2>
+<h3 id="espflash">espflash</h3>
+<p>Over the past quarter, we and the community have been busy making several improvements and fixes to <code>espflash</code>. We started by adding a note about permissions on Linux in pull request <a href="https://github.com/esp-rs/espflash/pull/391">#391</a> to ensure that users are aware of the necessary permissions when flashing ESP devices on Linux systems. In pull request <a href="https://github.com/esp-rs/espflash/pull/389">#389</a>, we made the default flashing frequency target specific to improve the flashing process. We also generated shell completions in pull request <a href="https://github.com/esp-rs/espflash/pull/388">#388</a> to enhance the usability of the <code>espflash</code> tool.</p>
+<p>In addition to these improvements, we also focused on fixing issues and bugs. We fixed the config file parsing in pull request <a href="https://github.com/esp-rs/espflash/pull/382">#382</a> and updated the <code>toml</code> dependency while fixing errors and feature gating <code>ctrlc</code> dependency in pull request <a href="https://github.com/esp-rs/espflash/pull/378">#378</a>. We also resolved issues with Raspberry CI in pull request <a href="https://github.com/esp-rs/espflash/pull/377">#377</a> to ensure smooth integration and testing. Furthermore, we made image header improvements and bugfixes in pull request <a href="https://github.com/esp-rs/espflash/pull/375">#375</a>, fixed chip revision check during flashing for the ESP8266 in pull request <a href="https://github.com/esp-rs/espflash/pull/373">#373</a>, and restored the cursor when exiting from serial port selection via Ctrl-C in pull request <a href="https://github.com/esp-rs/espflash/pull/372">#372</a>.</p>
+<p>In terms of new features, we added support for ESP32-H2 in pull request <a href="https://github.com/esp-rs/espflash/pull/371">#371</a> and introduced an <code>ESPFLASH_PORT</code> environment variable in pull request <a href="https://github.com/esp-rs/espflash/pull/366">#366</a> for added flexibility. We also updated the documentation in pull request <a href="https://github.com/esp-rs/espflash/pull/368">#368</a> to provide up-to-date and accurate information to users. Additionally, we made several fixes and improvements in pull requests such as <a href="https://github.com/esp-rs/espflash/pull/363">#363</a>, <a href="https://github.com/esp-rs/espflash/pull/359">#359</a>, <a href="https://github.com/esp-rs/espflash/pull/358">#358</a>, <a href="https://github.com/esp-rs/espflash/pull/354">#354</a>, and <a href="https://github.com/esp-rs/espflash/pull/353">#353</a> to ensure the stability and reliability of the <code>espflash</code> tool. Overall, our team has been actively working on addressing issues, adding new features, and improving the <code>espflash</code> repository to provide a better experience for our users.</p>
+<h2 id="matter">matter</h2>
+<p><a href="https://en.wikipedia.org/wiki/Matter_(standard)">matter</a> is an open-source connectivity standard for smart home and Internet of things devices, that promises to make smart devices work with each other regardless of which company manufactures them. We at Espressif are very interested in supporting this. ESP-IDF has support for it with the <a href="https://github.com/espressif/esp-matter">esp-matter</a> repository, which uses the C++ matter SDK, which we could of course write bindings to (we've already played around with this!) but ideally we'd love a pure Rust implementation.</p>
+<p>Introducing <a href="https://github.com/project-chip/matter-rs">matter-rs</a> a pure Rust implementation of the matter protocol. Espressif's very own <a href="https://github.com/kedars">@kedars</a> lead the development of this library, and it is now the official implementation adopted by the matter organization. There are many improvements and features to be added such as <code>async</code> and <code>no_std</code> support but it's a great start.</p>
+<br/>
+<hr />
+<br/>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://mabez.dev/tags/rust/">rust</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/espressif/">espressif</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/esp32/">esp32</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/llvm/">llvm</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/roadmap/">roadmap</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1730 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-04-28</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2023 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https://mabez.dev/js/copy.js"></script>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+    
+    
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>
