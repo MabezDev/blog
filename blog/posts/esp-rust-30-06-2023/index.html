@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https://mabez.dev/apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://mabez.dev/favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https://mabez.dev/favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https://mabez.dev/favicon.ico"
+  />
+  <link rel="stylesheet" href="https://mabez.dev/style.css"/>
+  
+  <title>Rust on Espressif chips - 30-06-2023</title>
+  
+
+  
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://mabez.dev/rss.xml">
+  
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Jun 30, 2023</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  6 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Rust on Espressif chips - 30-06-2023</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>This is the next quarterly update of esp-rs effort, detailing the progress over Q2 2023.</p>
+<h2 id="rust-compiler">Rust Compiler</h2>
+<p>The <a href="https://www.espressif.com/en/products/socs/esp32-c6">ESP32-C6</a> &amp; <a href="https://www.espressif.com/en/products/socs/esp32-h2">ESP32-H2</a> use the <code>riscv32imac</code> compilation target, however, for our standard library port based on esp-idf, only the <code>riscv32imc</code> existed. We now have support for the <code>riscv32imac</code> target #<a href="https://github.com/rust-lang/rust/pull/111369">111369</a> meaning you can use the standard library port on the <a href="https://www.espressif.com/en/products/socs/esp32-c6">ESP32-C6</a> &amp; <a href="https://www.espressif.com/en/products/socs/esp32-h2">ESP32-H2</a>. For those using the Xtensa enable compiler, the next release of the Rust compiler will also build and ship the <code>rust-analyzer-proc-macro-srv</code> component, which should fix many issues reported with rust analyzer #<a href="https://github.com/esp-rs/rust-build/pull/215">215</a>.</p>
+<h2 id="esp-hal-no-std">esp-hal - no_std</h2>
+<p>Most of the time spent this quarter has been on <a href="https://www.espressif.com/en/products/socs/esp32-h2">ESP32-H2</a> support. At the end of last quarter, we had some initial support but now we have managed to bring the ESP32-H2s level of support up to the level of our other chips in just a few months which is incredible. You can view the PRs for each driver <a href="https://github.com/esp-rs/esp-hal/pulls?q=is%3Apr+H2+is%3Aclosed+">here</a>.</p>
+<p>We've been working hard on adding support for async in esp-hal, this includes enabling async serial read <a href="https://github.com/esp-rs/esp-hal/pull/620">#620</a> and async serial write operations <a href="https://github.com/esp-rs/esp-hal/pull/510">#510</a>. Additionally, we added async support to the I2C driver <a href="https://github.com/esp-rs/esp-hal/pull/519">#519</a>. We also implemented support for multicore async GPIO <a href="https://github.com/esp-rs/esp-hal/pull/542">#542</a>. Moreover, we made the embassy time driver more flexible by allowing the choice of either timer on chips that support it <a href="https://github.com/esp-rs/esp-hal/pull/609">#609</a>.</p>
+<p>We simplified the user-facing DMA channel types, making them more user-friendly and intuitive <a href="https://github.com/esp-rs/esp-hal/pull/626">#626</a>. Additionally, we enabled SPI3 for DMA on ESP32-S3 <a href="https://github.com/esp-rs/esp-hal/pull/507">#507</a>. In order to provide support for specific boards with PSRAM built-in, we introduced initial PSRAM support for ESP32 <a href="https://github.com/esp-rs/esp-hal/pull/506">#506</a> and octal PSRAM support for ESP32-S3 <a href="https://github.com/esp-rs/esp-hal/pull/610">#610</a>.</p>
+<p>Other noteworthy improvements include the integration of <code>esp-riscv-rt</code> into esp-hal <a href="https://github.com/esp-rs/esp-hal/pull/578">#578</a>. We also simplified the <code>Delay</code> driver and now derive <code>Clone</code> and <code>Copy</code> traits. We also move interrupt handling code to RAM for improved interrupt performance <a href="https://github.com/esp-rs/esp-hal/pull/568">#568</a> <a href="https://github.com/esp-rs/esp-hal/pull/541">#541</a>. Additionally, we addressed a bug related to setting the vector base for the second core on Xtensa-based CPUs <a href="https://github.com/esp-rs/esp-hal/pull/536">#536</a>.</p>
+<h2 id="esp-wifi-no-std">esp-wifi - no_std</h2>
+<p>We have removed the hard requirement for timg0 as the main timer, offering more configuration flexibility <a href="https://github.com/esp-rs/esp-wifi/pull/199">#199</a>. Additionally, we reworked the initialization process to ensure proper initialization of both the hardware and scheduler <a href="https://github.com/esp-rs/esp-wifi/pull/194">#194</a>. To enhance WiFi performance, we made <code>preempt</code> improvements, resulting in better overall performance and responsiveness <a href="https://github.com/esp-rs/esp-wifi/pull/185">#185</a>. We also expanded the capabilities of the built-in stack by adding basic IPv6 support <a href="https://github.com/esp-rs/esp-wifi/pull/181">#181</a>.</p>
+<h2 id="esp-ieee802154-no-std">esp-ieee802154 - no_std</h2>
+<p>The newly introduced ESP32-C6 &amp; ESP32-H2 include an 802.4.15 radio, which is a low-power, low-rate standard intended for embedded devices. The <code>esp-ieee802154</code> crate implements the low-level driver for the radio in both chips, entirely in Rust and completely open source<sup class="footnote-reference"><a href="#1">1</a></sup>! This is a big leap from our WiFi drivers, where we interface with binary blobs over the C FFI. There are some useful examples in the repository, including a <code>sniffer</code> example to receive raw 802.4.15 frames. In the next few months, we will begin working on getting this driver to work with <a href="https://openthread.io/"><code>openthread</code></a>.</p>
+<h2 id="esp-idf-std">esp-idf - std</h2>
+<p>We added safe abstractions to the CRC functions in ESP ROM in <a href="https://github.com/esp-rs/esp-idf-hal/pull/261">#261</a>. We also introduced support for <code>WakeupReason</code> from <code>Ext0</code> events, allowing for more fine-grained control over wakeup behavior <a href="https://github.com/esp-rs/esp-idf-hal/pull/259">#259</a>. Additionally, we implemented I2S, enabling communication with I2S peripherals <a href="https://github.com/esp-rs/esp-idf-hal/pull/232">#232</a>. Furthermore, we incorporated changes from the newest embedded-hal release into our drivers, ensuring compatibility and staying up-to-date with the latest improvements in the embedded-hal ecosystem <a href="https://github.com/esp-rs/esp-idf-hal/pull/224">#224</a>.</p>
+<p>In esp-idf-svc, we focused on expanding the capabilities of the server examples by adding higher-level server examples, providing more comprehensive and practical usage scenarios <a href="https://github.com/esp-rs/esp-idf-svc/pull/269">#269</a>. We also exposed a simple safe wrapper for querying rssi when using WiFi <a href="https://github.com/esp-rs/esp-idf-svc/pull/245">#245</a>. Additionally, we now support async and blocking adaptors for the WiFi driver <a href="https://github.com/esp-rs/esp-idf-svc/pull/243">#243</a>. </p>
+<h2 id="tooling">Tooling</h2>
+<h3 id="espflash">espflash</h3>
+<p>The highlight of this cycle was the release of Version 2.0.0, which marked a major milestone for the project and introduced substantial enhancements <a href="https://github.com/esp-rs/espflash/pull/434">#434</a>. Please read the full <a href="https://github.com/esp-rs/espflash/blob/main/CHANGELOG.md">CHANGELOG</a> before upgrading. </p>
+<p>We also invested effort in refining the release and CI workflows, resulting in smoother and more efficient processes <a href="https://github.com/esp-rs/espflash/pull/421">#421</a> <a href="https://github.com/esp-rs/espflash/pull/419">#419</a>. We addressed specific issues such as missing imports for <code>linux</code> and <code>musl</code> environments <a href="https://github.com/esp-rs/espflash/pull/420">#420</a> and improved handling of serial ports on BSD systems <a href="https://github.com/esp-rs/espflash/pull/415">#415</a>.</p>
+<p>In terms of usability and user experience, we eliminated the need for the <code>--partition-table</code> argument when erasing partitions, simplifying the process <a href="https://github.com/esp-rs/espflash/pull/413">#413</a>. We also updated to the latest version of <code>addr2line</code> and addressed breaking changes before releasing 2.0.0 <a href="https://github.com/esp-rs/espflash/pull/412">#412</a>. Furthermore, we improved error messaging by rewording the &quot;elf too big&quot; error and fixed the Windows installation process for smoother setup <a href="https://github.com/esp-rs/espflash/pull/400">#400</a> <a href="https://github.com/esp-rs/espflash/pull/399">#399</a>. Additionally, we introduced a diagnostic feature that informs users about the partition table format, aiding troubleshooting <a href="https://github.com/esp-rs/espflash/pull/397">#397</a>. To ensure compatibility and expand our supported targets, we updated the flasher stubs and bootloaders <a href="https://github.com/esp-rs/espflash/pull/426">#426</a> and the supported targets for ESP32-C6/H2 <a href="https://github.com/esp-rs/espflash/pull/424">#424</a>.</p>
+<h3 id="probe-rs">probe-rs</h3>
+<p>We've had flashing support in probe-rs for a couple of years now, but it was only possible to flash a <a href="https://github.com/espressif/esp32c3-direct-boot-example">direct-boot application</a>, but we now support the esp-idf bootloader format in probe-rs #<a href="https://github.com/probe-rs/probe-rs/pull/1629">1629</a>. We also have improved the performance of using the built-in USB-SERIAL-JTAG peripheral available on many Espressif chips, resulting in up to a 10x improvement in flashing times and a better overall debugging experience #<a href="https://github.com/probe-rs/probe-rs/pull/1633">1633</a>.</p>
+<h2 id="matter-rs">matter-rs</h2>
+<p><a href="https://en.wikipedia.org/wiki/Matter_(standard)">matter</a> is an open-source connectivity standard for smart home and Internet of things devices, that promises to make smart devices work with each other regardless of which company manufactures them. <a href="https://github.com/project-chip/matter-rs">matter-rs</a> is a pure Rust implementation of the matter protocol. <a href="https://github.com/kedars">@kedars</a> and <a href="https://github.com/ivmarkov">@ivmarkov</a> have been working hard to bring both <code>no_std</code> support and <code>async</code> support to <a href="https://github.com/project-chip/matter-rs">matter-rs</a>. For more information on the active development branches see <a href="https://github.com/project-chip/matter-rs#important-note">this section of the readme</a>.</p>
+<h2 id="community">Community</h2>
+<p>If you look closer at the individual PRs in this post you will see that many of the contributions are now coming from community members instead of just us at Espressif. This is <em>really</em> exciting and humbling to see, and we can't thank the community enough! If you are interested in getting involved or just want to see what we're up to, come say hi in the <a href="https://matrix.to/#/#esp-rs:matrix.org">esp-rs matrix</a> channel.</p>
+<br/>
+<hr />
+<br/>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>phy initialization is still done through binary blobs, but after that, the entire driver is controlled via open-source Rust code.</p>
+</div>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://mabez.dev/tags/rust/">rust</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/espressif/">espressif</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/esp32/">esp32</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/llvm/">llvm</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>1492 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2023-06-30</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2023 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https://mabez.dev/js/copy.js"></script>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+    
+    
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>
