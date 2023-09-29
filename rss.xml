@@ -7,7 +7,62 @@
         <generator>Zola</generator>
         <language>en</language>
         <atom:link href="https://mabez.dev/rss.xml" rel="self" type="application/rss+xml"/>
-        <lastBuildDate>Fri, 30 Jun 2023 00:00:00 +0000</lastBuildDate>
+        <lastBuildDate>Fri, 29 Sep 2023 00:00:00 +0000</lastBuildDate>
+        <item>
+            <title>Rust on Espressif chips - 29-09-2023</title>
+            <pubDate>Fri, 29 Sep 2023 00:00:00 +0000</pubDate>
+            <link>https://mabez.dev/blog/posts/esp-rust-29-09-2023/</link>
+            <guid>https://mabez.dev/blog/posts/esp-rust-29-09-2023/</guid>
+            <description>&lt;p&gt;This is the next quarterly update of the esp-rs effort, detailing the progress over Q3 2023.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rust-xtensa-compiler&quot;&gt;Rust Xtensa Compiler&lt;&#x2F;h2&gt;
+&lt;p&gt;We had one big bugfix around hardware &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;rust&#x2F;issues&#x2F;180&quot;&gt;floating point unit for ESP32 &amp;amp; ESP32-S3&lt;&#x2F;a&gt;, shout out to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;zRedShift&quot;&gt;@zRedShift&lt;&#x2F;a&gt; for finding the bug and providing the fix in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;llvm-project&#x2F;pull&#x2F;76&quot;&gt;llvm-project#76&lt;&#x2F;a&gt;. Along with the bugfix, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;zRedShift&quot;&gt;@zRedShift&lt;&#x2F;a&gt; also contributed two code generation improvement patches, one to improve the performance of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;llvm-project&#x2F;pull&#x2F;77&quot;&gt;&lt;code&gt;cttz&lt;&#x2F;code&gt;&lt;&#x2F;a&gt; and another to improve the performance of &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;llvm-project&#x2F;pull&#x2F;78&quot;&gt;&lt;code&gt;abs&lt;&#x2F;code&gt;, &lt;code&gt;min&lt;&#x2F;code&gt; and &lt;code&gt;max&lt;&#x2F;code&gt;&lt;&#x2F;a&gt;. The Xtensa-related LLVM patches upstream are still in review but are slowly making progress.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-hal-no-std&quot;&gt;esp-hal - no_std&lt;&#x2F;h2&gt;
+&lt;p&gt;Q3 saw the &lt;code&gt;v0.11&lt;&#x2F;code&gt; and &lt;code&gt;v0.12&lt;&#x2F;code&gt; release of esp-hal. Highlights include updating the &lt;code&gt;embedded-hal-*&lt;&#x2F;code&gt; packages to &lt;code&gt;1.0.0-rc.1&lt;&#x2F;code&gt;, ready for the long awaited &lt;code&gt;1.0&lt;&#x2F;code&gt; release of &lt;code&gt;embedded-hal&lt;&#x2F;code&gt;; The addition of deep-sleep support for the &lt;code&gt;ESP32-S3&lt;&#x2F;code&gt;, and new cryptographic accelerator support for ECC, HMAC and RSA. We&#x27;ve made a start on adding support for the low-power core of the ESP32-C6, with some basic GPIO drivers and support for loading the LP code from the main core. Check out the full &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;blob&#x2F;main&#x2F;CHANGELOG.md&quot;&gt;changelog&lt;&#x2F;a&gt; for all the details.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-wifi-no-std&quot;&gt;esp-wifi - no_std&lt;&#x2F;h2&gt;
+&lt;p&gt;We added BLE support for the ESP32-C6 in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-wifi&#x2F;pull&#x2F;262&quot;&gt;esp-wifi#262&lt;&#x2F;a&gt;, improved the esp-now async API in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-wifi&#x2F;pull&#x2F;232&quot;&gt;#232&lt;&#x2F;a&gt; along with a bunch of other smaller fixes and improvements! We&#x27;re gearing up for our first crates.io release, which is long overdue. We&#x27;ve had all the pieces in place for a release, we just didn&#x27;t get around to doing it! We&#x27;re currently in the process of improving the docs, and doing some final testing before the release.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-idf-hal-std&quot;&gt;esp-idf-hal - std&lt;&#x2F;h2&gt;
+&lt;p&gt;Async I2S, SPI, ADC and GPIO were added in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-idf-hal&#x2F;pull&#x2F;279&quot;&gt;esp-idf-hal#279&lt;&#x2F;a&gt;, with a follow up PR for UART in &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-idf-hal&#x2F;pull&#x2F;306&quot;&gt;esp-idf-hal#306&lt;&#x2F;a&gt;. Huge props to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ivmarkov&quot;&gt;@ivmarkov&lt;&#x2F;a&gt; for the tremendous effort here. From the latest &lt;code&gt;v0.42.0&lt;&#x2F;code&gt; release, ESP-IDF version 4.3 is now deprecated for use with Rust. Please see &lt;a href=&quot;https:&#x2F;&#x2F;docs.espressif.com&#x2F;projects&#x2F;esp-idf&#x2F;en&#x2F;latest&#x2F;esp32&#x2F;versions.html#support-periods&quot;&gt;ESP-IDFs support schedule&lt;&#x2F;a&gt; for upgrade paths. See the full changelog for esp-idf-hal &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-idf-hal&#x2F;blob&#x2F;master&#x2F;CHANGELOG.md&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-idf-svc-std&quot;&gt;esp-idf-svc - std&lt;&#x2F;h2&gt;
+&lt;p&gt;Bluetooth classic support (for the esp32 only at the moment) has been added, behind the &lt;code&gt;experimental&lt;&#x2F;code&gt; feature flag; BLE is also planned. We are also discussing how to go about adding generic Bluetooth traits in embedded-svc, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;embedded-svc&#x2F;issues&#x2F;32&quot;&gt;here&lt;&#x2F;a&gt;. From the latest release, it will no longer be required to depend on the esp-idf-sys crate or the esp-idf-hal crate directly in your project, instead, this crate will be re-exported by esp-idf-svc as &lt;code&gt;esp_idf_svc::sys&lt;&#x2F;code&gt; and &lt;code&gt;esp_idf_svc::hal&lt;&#x2F;code&gt; respectively.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;matter-rs-rs-matter&quot;&gt;matter-rs &#x2F; rs-matter&lt;&#x2F;h2&gt;
+&lt;p&gt;rs-matter (previously, matter-rs, but has been renamed due to an existing crate registered on crates.io) has had its first crates.io release! It is now async first (executor agnostic), with support for no_std out of the box, even including QR generation. The rs-matter repo now &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;project-chip&#x2F;rs-matter&quot;&gt;has some examples&lt;&#x2F;a&gt; which can be run on std platforms, including the espidf std port! For &lt;code&gt;no_std&lt;&#x2F;code&gt; there are two examples of matter usage, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;bjoernQ&#x2F;matter-rs-experiment&quot;&gt;one using an esp32c3 (blocking)&lt;&#x2F;a&gt; and another using &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ivmarkov&#x2F;rp-matter&quot;&gt;a rp-2040 (async)&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tooling&quot;&gt;Tooling&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;espflash&quot;&gt;espflash&lt;&#x2F;h3&gt;
+&lt;p&gt;Just a small patch release to report, &lt;code&gt;v2.0.1&lt;&#x2F;code&gt; which added more help text on the CLI commands, and fixed a compilation issue in the &lt;code&gt;cargo&lt;&#x2F;code&gt; dependency.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;espsegs&quot;&gt;espsegs&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;bjoernQ&#x2F;espsegs&quot;&gt;espsegs&lt;&#x2F;a&gt; is a tool to see what memory is being used by which sections and where on an esp. Once installed, you can simply point the tool to an elf file, and you&#x27;ll get an output like below:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;color:#c0c5ce;&quot;&gt;&lt;code&gt;&lt;span&gt;❯ espsegs target\riscv32imc-unknown-none-elf\release\examples\embassy_dhcp --chip esp32c3
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;.text_dummy  3c000000  458784 DROM  [█████████████                                           ]
+&lt;&#x2F;span&gt;&lt;span&gt;.rodata      3c070020   53060 DROM  [             █                                          ]
+&lt;&#x2F;span&gt;&lt;span&gt;.rodata.wifi 3c07cf64   21756 DROM  [              ▏                                         ]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;.rwdata_dumm 3fc80000   16948 DRAM  [██████                                                  ]
+&lt;&#x2F;span&gt;&lt;span&gt;.data        3fc84238    4652 DRAM  [      █                                                 ]
+&lt;&#x2F;span&gt;&lt;span&gt;.bss         3fc85468  121544 DRAM  [       ████████████████████████████████████████████     ]
+&lt;&#x2F;span&gt;&lt;span&gt;.data.wifi   3fca2f30     360 DRAM  [                                                    ▏   ]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;.trap        40380000    3188 IRAM  [    ▏                                                   ]
+&lt;&#x2F;span&gt;&lt;span&gt;.rwtext      40380c74    2080 IRAM  [     ▏                                                  ]
+&lt;&#x2F;span&gt;&lt;span&gt;.rwtext.wifi 40381494   11680 IRAM  [      ███                                               ]
+&lt;&#x2F;span&gt;&lt;span&gt;
+&lt;&#x2F;span&gt;&lt;span&gt;.text_init   42000020     244 IROM  [▏                                                       ]
+&lt;&#x2F;span&gt;&lt;span&gt;.text        42000114  402684 IROM  [███████████                                             ]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;h2 id=&quot;rfcs&quot;&gt;RFCs&lt;&#x2F;h2&gt;
+&lt;p&gt;This section is mainly for users of esp-rs; we have various issues open in which we would like user feedback.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;esp-hal&quot;&gt;esp-hal&lt;&#x2F;h3&gt;
+&lt;p&gt;We are considering removing direct-boot support: &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;issues&#x2F;803&quot;&gt;esp-hal#803&lt;&#x2F;a&gt;, if you think this might affect you, please state your case in that issue.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;talks&quot;&gt;Talks&lt;&#x2F;h2&gt;
+&lt;p&gt;Espressif recently hosted their annual developer conference, Espressif DevCon. Myself and my colleague &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;JurajSadel&quot;&gt;Juraj Sadel&lt;&#x2F;a&gt; did a short talk on using async in Rust, which you can check out below.&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; style=&quot;margin:auto; display: block;&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;QPp4WEjx5jU?si=ezdXBmUTHmCxFWk_&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;p&gt;I also did a talk at &lt;a href=&quot;https:&#x2F;&#x2F;www.meetup.com&#x2F;copenhagen-rust-community&#x2F;&quot;&gt;the Rust Copenhagen monthly meet up&lt;&#x2F;a&gt; in August. This talk is more focused on introducing embedded programming to those who already know Rust. Check it out below if you are interested.&lt;&#x2F;p&gt;
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; style=&quot;margin:auto; display: block;&quot; src=&quot;https:&#x2F;&#x2F;www.youtube.com&#x2F;embed&#x2F;gdmUhzJfgzk?si=GA7F_QyzQU3X198S&quot; title=&quot;YouTube video player&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share&quot; allowfullscreen&gt;&lt;&#x2F;iframe&gt;
+&lt;br&#x2F;&gt;
+&lt;hr &#x2F;&gt;
+&lt;br&#x2F;&gt;
+</description>
+        </item>
         <item>
             <title>Rust on Espressif chips - 30-06-2023</title>
             <pubDate>Fri, 30 Jun 2023 00:00:00 +0000</pubDate>
