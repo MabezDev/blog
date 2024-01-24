@@ -7,7 +7,39 @@
         <generator>Zola</generator>
         <language>en</language>
         <atom:link href="https://mabez.dev/rss.xml" rel="self" type="application/rss+xml"/>
-        <lastBuildDate>Fri, 29 Sep 2023 00:00:00 +0000</lastBuildDate>
+        <lastBuildDate>Wed, 24 Jan 2024 00:00:00 +0000</lastBuildDate>
+        <item>
+            <title>Rust on Espressif chips - 24-01-2024</title>
+            <pubDate>Wed, 24 Jan 2024 00:00:00 +0000</pubDate>
+            <link>https://mabez.dev/blog/posts/esp-rust-24-01-2024/</link>
+            <guid>https://mabez.dev/blog/posts/esp-rust-24-01-2024/</guid>
+            <description>&lt;p&gt;This is the next quarterly update of the esp-rs effort, detailing the progress over Q4 2023.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rust-compiler&quot;&gt;Rust Compiler&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;upstream&quot;&gt;Upstream&lt;&#x2F;h3&gt;
+&lt;p&gt;Over Q4 we saw many improvements to the upstream RISC-V targets. Firstly, all bare metal non-atomic (not &lt;code&gt;a&lt;&#x2F;code&gt;) targets now &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;114499&quot;&gt;have atomic load&#x2F;store code generation&lt;&#x2F;a&gt; enabled! This was a massive pain point for users of the ESP32C3 and ESP32C2, along with other RISC-V targets in the wild. It&#x27;s currently still in nightly, but with the 1.76, release it will be available on stable. Secondly, we added the &lt;code&gt;riscv32imafc-unknown-none-elf&lt;&#x2F;code&gt; target, ready for the &lt;a href=&quot;https:&#x2F;&#x2F;www.espressif.com&#x2F;en&#x2F;news&#x2F;ESP32-P4&quot;&gt;ESP32P4&lt;&#x2F;a&gt;, Espressif&#x27;s first chip without a radio. We also promoted all the current bare metal RISC-V targets to tier 2, and in doing so, filled out the missing &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;117874&quot;&gt;platform support document&lt;&#x2F;a&gt;. Finally, we added an &lt;code&gt;espidf&lt;&#x2F;code&gt; target for the ESP32P4, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;119738&quot;&gt;riscv32imafc-esp-espidf&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;xtensa&quot;&gt;Xtensa&lt;&#x2F;h3&gt;
+&lt;p&gt;The LLVM team at Espressif has continued to improve and rebase the Xtensa LLVM backend, which has recently been rebased on LLVM 17. Unfortunately, we don&#x27;t have any upstream progress to report at this time.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-hal-no-std&quot;&gt;esp-hal - no_std&lt;&#x2F;h2&gt;
+&lt;p&gt;Q4 saw the &lt;code&gt;v0.13&lt;&#x2F;code&gt;, &lt;code&gt;v0.14&lt;&#x2F;code&gt; and &lt;code&gt;v0.15&lt;&#x2F;code&gt; release of esp-hal. Highlights include new async drivers for PARL_IO, I2S and RMT; along with updating to the long-awaited &lt;code&gt;v1.0&lt;&#x2F;code&gt; of embedded-hal! We expanded on our low-power support by unifying the API across all chips, as well as adding ULP (Ultra-Low-Powered) core support for the ESP32S2 &amp;amp; ESP32S3. Lastly, one cool feature we implemented was &lt;code&gt;flip-link&lt;&#x2F;code&gt; for the ESP32C6 and ESP32H2, &lt;code&gt;flip-link&lt;&#x2F;code&gt; gives zero-cost stack overflow detection, which is really nice for chips like these that don&#x27;t have an MMU that can catch this in hardware. Check out the full &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;blob&#x2F;main&#x2F;CHANGELOG.md&quot;&gt;changelog&lt;&#x2F;a&gt; for all the details and changes.&lt;&#x2F;p&gt;
+&lt;p&gt;One important breaking change that should be noted is that we no longer support atomic emulation, as upstream Rust now supports atomic load &amp;amp; stores on non-atomic targets. Users with applications using the ESP32S2, ESP32C3 or ESP32C2, please read &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;blob&#x2F;main&#x2F;CHANGELOG.md#breaking-1&quot;&gt;this&lt;&#x2F;a&gt; to ease upgrading. For CAS-based atomics, you should switch to the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;taiki-e&#x2F;portable-atomic&quot;&gt;portable-atomic&lt;&#x2F;a&gt; crate. A huge thank you to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;taiki-e&quot;&gt;@taiki-e&lt;&#x2F;a&gt; for adding support for our targets in portable-atomic, and supporting crates, as well as pushing the atomic load&#x2F;store compiler changes through!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-wifi-no-std&quot;&gt;esp-wifi - no_std&lt;&#x2F;h2&gt;
+&lt;p&gt;In Q4 we added support for BLE with the ESP32H2, fixed coexistence support on the ESP32 and added a benchmark example to test WiFi throughput. On top of that, we finally released &lt;code&gt;esp-wifi&lt;&#x2F;code&gt; on crates.io! We spent a long time refining and documenting to get to this point and we&#x27;re pleased to have it published. &lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tooling&quot;&gt;Tooling&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;espflash&quot;&gt;espflash&lt;&#x2F;h3&gt;
+&lt;p&gt;Q4 saw the release of &lt;code&gt;v2.1.0&lt;&#x2F;code&gt; of espflash, a small release with some new functionality for erasing sectors, regions and partitions. We then began the &lt;code&gt;v3.0&lt;&#x2F;code&gt; development cycle, which will include &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-flasher-stub&quot;&gt;the Rust-based flashing stubs&lt;&#x2F;a&gt; by default! Check out the unreleased section of the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espflash&#x2F;blob&#x2F;main&#x2F;CHANGELOG.md#added&quot;&gt;changelog&lt;&#x2F;a&gt; to see what&#x27;s been added so far.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;probe-rs&quot;&gt;probe-rs&lt;&#x2F;h3&gt;
+&lt;p&gt;There has been a tonne of progress with probe-rs and Espressif chips over Q4. This is all driven by the fact we want to start testing using real hardware in CI, known as Hardware In Loop (HIL) testing.&lt;&#x2F;p&gt;
+&lt;p&gt;Newer Espressif chips are all RISC-V based, which probe-rs already has good support for. The ESP32, ESP32S2 and ESP32S3, however, are Xtensa-based, there for to test these in CI, we need &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;probe-rs&#x2F;probe-rs&#x2F;issues&#x2F;2001&quot;&gt;Xtensa architecture support in probe-rs&lt;&#x2F;a&gt; and that&#x27;s what we set out to do. I am happy to report that we have enough Xtensa support in probe-rs to, connect, inspect and flash the ESP32S2 and ESP32S3! This also comes with some huge speed improvements to &lt;em&gt;all&lt;&#x2F;em&gt; chips thanks to improvements in the USB-SERIAL-JTAG and FTDI drivers in probe-rs. All of this would not be possible without the help of the probe-rs team and of course the hard work of one particular individual, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;bugadani&quot;&gt;Dániel Buga&lt;&#x2F;a&gt; who has been championing this work.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;rfc&quot;&gt;RFC&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;esp-openthread&quot;&gt;esp-openthread&lt;&#x2F;h3&gt;
+&lt;p&gt;We&#x27;re looking for input on what to develop next with esp-openthread, if you are looking to use thread in your project or product, please take a look at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-openthread&#x2F;issues&#x2F;4&quot;&gt;this RFC issue&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;future-work&quot;&gt;Future work&lt;&#x2F;h2&gt;
+&lt;p&gt;To see what we&#x27;ll be working on this quarter, check out Jesse Braham&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;beta7.io&#x2F;posts&#x2F;esp-rs-quarterly-planning-q1-2024&#x2F;&quot;&gt;post&lt;&#x2F;a&gt;!&lt;&#x2F;p&gt;
+&lt;br&#x2F;&gt;
+&lt;hr &#x2F;&gt;
+&lt;br&#x2F;&gt;
+</description>
+        </item>
         <item>
             <title>Rust on Espressif chips - 29-09-2023</title>
             <pubDate>Fri, 29 Sep 2023 00:00:00 +0000</pubDate>
