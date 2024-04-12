@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <meta itemprop="name" content="Scott Mabin" />
+  <meta itemprop="description" content="Scott Mabin&#x27;s blog" />
+
+  <link rel="apple-touch-icon" sizes="180x180" href="https://mabez.dev/apple-touch-icon.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="https://mabez.dev/favicon-32x32.png" />
+  <link
+    rel="icon"
+    type="image/png"
+    sizes="16x16"
+    href="https://mabez.dev/favicon-16x16.png"
+  />
+  <link
+    rel="shortcut icon"
+    href="https://mabez.dev/favicon.ico"
+  />
+  <link rel="stylesheet" href="https://mabez.dev/style.css"/>
+  
+  <title>Rust on Espressif chips - 12-04-2024</title>
+  
+
+  
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="https://mabez.dev/rss.xml">
+  
+
+  <body id="page">
+
+	
+<header id="site-header" class="animated slideInUp faster">
+  <div class="hdr-wrapper section-inner">
+    <div class="hdr-left">
+      <div class="site-branding">
+        <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a>
+      </div>
+      <nav class="site-nav hide-in-mobile">
+            
+        
+        <a href="https://mabez.dev/blog/posts">Blog</a>
+        
+      </nav>
+    </div>
+    <div class="hdr-right hdr-icons">
+      <span class="hdr-social hide-in-mobile">
+        
+
+<a href="https:&#x2F;&#x2F;www.linkedin.com&#x2F;in&#x2F;scott-mabin" target="_blank" rel="noopener me"
+   title="linkedin">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+  
+</a>
+
+<a href="https:&#x2F;&#x2F;github.com&#x2F;mabezdev" target="_blank" rel="noopener me"
+   title="github">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" class="feather" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+  
+</a>
+
+
+      </span>
+      <button id="menu-btn" class="hdr-btn" title="Menu">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="feather feather-menu"
+        >
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+<div id="mobile-menu" class="animated fast">
+  <ul>
+    
+    <li><a href="https://mabez.dev/blog/posts">Blog</a></li>
+    
+  </ul>
+</div>
+
+	
+	
+
+		
+<main class="site-main section-inner animated fadeIn faster">
+  <article class="thin">
+	<header class="post-header">
+	  <div class="post-meta">
+		
+		<span>Apr 12, 2024</span>
+		<small> - 
+<span class="reading-time" title="Estimated read time">
+  
+  3 min read
+  
+</span>
+</small>
+		
+            
+	  </div>
+	  <h1>Rust on Espressif chips - 12-04-2024</h1>
+	</header>
+
+	<div class="content">
+        
+	  <p>This is the next quarterly update of the esp-rs effort, detailing the progress over Q1 2024.</p>
+<h2 id="xtensa-rust-compiler-llvm-xtensa">Xtensa Rust Compiler &amp; LLVM Xtensa</h2>
+<p>LLVM has recently moved away from Phabricator to Github for active development, which meant we had to resubmit some of our patches. We took some time to split up the patches we previously submitted, and resubmitted them; one of which has already been merged! You can follow the <a href="https://github.com/espressif/llvm-project/issues/4">tracking issue</a> we have open to follow along. Just a reminder that you only need the Xtensa compiler for the ESP32, ESP32-S2 and ESP32-S3, all other Espressif chips are RISC-V and work well with the upstream compiler.</p>
+<h2 id="esp-hal">esp-hal</h2>
+<p>We've put a lot of focus on <code>esp-hal</code> this quarter, so we have a bunch of updates to share. The biggest update is that we have unified the HAL such that all chips are now supported by a singular package, <code>esp-hal</code>. This effort was months in the making, and the <a href="https://github.com/esp-rs/esp-hal/issues/446">original issue</a> discussing merging it was opened just over a year ago! Previously we had a common library with shared implementations, which was then broken out into a hal package for each chip. With each new chip release by Espressif, we realized this was not scalable. We made the decision merge all the HALs into <code>esp-hal</code>, which has now been released on crates.io! Migration is quite straightforward, you can check out the <a href="https://github.com/esp-rs/esp-hal/releases/tag/v0.16.0">release notes</a> for the details.</p>
+<p>If you are a contributor, the workflow within the esp-hal repository has also changed. In unifying the HAL, we realized we had outgrown vanilla cargo as a build tool and needed something more configurable. We have switched to <code>cargo xtask</code> to manage building packages, examples, and running tests on hardware (more on that shortly!). If you are a developer or looking to run some examples, please run <code>cargo xtask help</code> in the main <code>esp-hal</code> repository to see what's available.</p>
+<h2 id="tooling">Tooling</h2>
+<h3 id="probe-rs">probe-rs</h3>
+<p>In the last post, I mentioned that we now had support for all Espressif chips in probe-rs. Whilst this is an amazing achievement on its own which allows our users to use the wonderful probe-rs tooling, we also have had our eyes on something else, Hardware-In-Loop (HIL) testing. Building any reliable set of libraries and run-times <em>requires</em> testing. Whilst we can run <em>some</em> tests on the host machine to test certain bits of logic, testing drivers requires that they run on the actual intended target. Espressif already does tonnes of HIL testing for other projects such as ESP-IDF, Zephyr and NuttX, so we have the physical infrastructure, but as Rust developers, we wanted native Rust software to write and run our test cases. Enter <a href="https://github.com/probe-rs/embedded-test">embedded-test</a>, which is a test harness that can integrate with probe-rs to run test cases on real devices! It has first-class support for Espressif chips, and we're already using it in our ever-growing <a href="https://github.com/esp-rs/esp-hal/tree/main/hil-test">esp-hal HIL test suite</a>. We can't thank the author of embedded-test, <a href="https://github.com/t-moe">Timo</a>, and the <a href="https://github.com/probe-rs/probe-rs">probe-rs team</a> enough!</p>
+<h3 id="espflash">espflash</h3>
+<p>We have released v3 of espflash, the most notable change with this is that we are now using Rust-based stub (instead of the ones written in C) to flash Espressif chips. What is a stub you ask? It's a small program that is loaded into RAM which espflash talks to over serial to flash new programs to the chip. Espressif chips come with a ROM bootloader, which can manage flashing, but it is very simple and doesn't always leverage the full flashing potential of the chip resulting in slower development cycles. The stub program is available under <a href="https://github.com/esp-rs/esp-flasher-stub">esp-rs/esp-flasher-stub</a> and leverages <code>esp-hal</code> under the hood to communicate with espflash. There are of course a tonne of bugfixes, enhancements and changes, so please check out the <a href="https://github.com/esp-rs/espflash/blob/main/CHANGELOG.md">changelog</a> for all the details. In the spirit of testing, we've also added HIL testing to espflash, to ensure we minimize regressions between releases.</p>
+<h2 id="events">Events</h2>
+<p>I wanted to post this before <a href="https://www.embedded-world.de/en">Embedded World</a>, however I wasn't able to, but I'd like to say thanks to everyone who turned and gave us feedback on Rust support, it was really nice to interact with you all! We will also be attending <a href="https://2024.rustnl.org/">RustNL</a> next month, so if you are attending and you see us, come say hi!</p>
+<br/>
+<hr />
+<br/>
+
+	</div>
+	<hr class="post-end">
+	<footer class="post-info">
+    
+	  <p>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+		
+		
+		<span class="tag"><a href="https://mabez.dev/tags/rust/">rust</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/espressif/">espressif</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/esp32/">esp32</a></span>
+		
+		<span class="tag"><a href="https://mabez.dev/tags/llvm/">llvm</a></span>
+		
+		
+    </p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>802 Words</p>
+    
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2024-04-12</p>
+    
+	</footer>
+  </article>
+    
+  
+  <div class="post-nav thin">
+	
+	
+  </div>
+
+  
+</main>
+
+	  </div>
+	  
+	  
+
+
+
+<footer id="site-footer" class="section-inner thin animated fadeIn faster">
+  <p>&copy; 2024 <a href="https:&#x2F;&#x2F;mabez.dev">Scott Mabin</a> &#183; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></p>
+  <p>Made with <a href="https://www.getzola.org" target="_blank" rel="noopener">Zola</a> &#183; Theme <a href="https://github.com/VersBinarii/hermit_zola" target="_blank" rel="noopener">Hermit_Zola</a>
+	
+	&#183; <a href="https://mabez.dev/rss.xml" target="_blank" title="rss"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-rss"><path d="M4 11a9 9 0 0 1 9 9"></path><path d="M4 4a16 16 0 0 1 16 16"></path><circle cx="5" cy="19" r="1"></circle></svg></a>
+	
+  </p>
+</footer>
+
+
+
+
+	</div>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+	<!-- Math rendering -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous"
+        onload="renderMathInElement(document.body, { delimiters: [ {left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\[', right: '\\]', display: true}, {left: '\\(', right: '\\)', display: false}]});"></script>
+
+    
+
+	
+	<script src="https://mabez.dev/js/copy.js"></script>
+	
+	<script src="https://mabez.dev/js/main.js"></script>
+
+    
+    
+
+	
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-146726046-1"></script>
+    <script>
+     window.dataLayer = window.dataLayer || [];
+     function gtag(){dataLayer.push(arguments);}
+     gtag('js', new Date());
+     gtag('config', 'UA-146726046-1');
+    </script>
+    
+  </body>
+</html>
