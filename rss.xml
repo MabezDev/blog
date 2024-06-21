@@ -7,7 +7,29 @@
         <generator>Zola</generator>
         <language>en</language>
         <atom:link href="https://mabez.dev/rss.xml" rel="self" type="application/rss+xml"/>
-        <lastBuildDate>Fri, 12 Apr 2024 00:00:00 +0000</lastBuildDate>
+        <lastBuildDate>Fri, 21 Jun 2024 00:00:00 +0000</lastBuildDate>
+        <item>
+            <title>Rust on Espressif chips - 21-06-2024</title>
+            <pubDate>Fri, 21 Jun 2024 00:00:00 +0000</pubDate>
+            <link>https://mabez.dev/blog/posts/esp-rust-21-06-2024/</link>
+            <guid>https://mabez.dev/blog/posts/esp-rust-21-06-2024/</guid>
+            <description>&lt;p&gt;This is the next quarterly update of the esp-rs effort, detailing the progress over Q2 2024.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;xtensa-rust-compiler-llvm-xtensa&quot;&gt;Xtensa Rust Compiler &amp;amp; LLVM Xtensa&lt;&#x2F;h2&gt;
+&lt;p&gt;Quite a few patches have been merged upstream in LLVM regarding Xtensa support (see the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;espressif&#x2F;llvm-project&#x2F;issues&#x2F;4&quot;&gt;tracking issue&lt;&#x2F;a&gt; here), so much so that the latest LLVM main branch can emit Xtensa machine code and assembly! It&#x27;s not quite enough to build projects with yet, and Rust is still using an older version of LLVM but we&#x27;re making good progress towards soon being able to use a vanilla toolchain for ESP32, ESP32-S2 and ESP32-S3 projects.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;esp-hal&quot;&gt;esp-hal&lt;&#x2F;h2&gt;
+&lt;p&gt;esp-hal saw two releases, &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;releases&#x2F;tag&#x2F;v0.17.0&quot;&gt;v0.17.0&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;releases&#x2F;tag&#x2F;v0.18.0&quot;&gt;v0.18.0&lt;&#x2F;a&gt;. The biggest change across the new releases was the switch to run-time interrupt binding, instead of link-time interrupt binding. This means that interrupts are now allocated at runtime, which provides much more flexibility in how they are used. The driving force behind this change was to allow, blocking, interrupt-driven &lt;em&gt;and&lt;&#x2F;em&gt; async drivers to co-exist at the same time. We&#x27;ve spent much of our time since improving our current APIs, removing unnecessary generics, creating consistency between drivers and more. This included a complete overhaul of the GPIO module, to use &lt;code&gt;struct&lt;&#x2F;code&gt;&#x27;s to model pin behavior instead of type states. We took a similar approach for the timers too. We now have one timer driver for a given behavior, &lt;code&gt;PeriodicTimer&lt;&#x2F;code&gt;, &lt;code&gt;OneShotTimer&lt;&#x2F;code&gt; which can take in any kind of timer on each chip.&lt;&#x2F;p&gt;
+&lt;p&gt;Another big change is that we&#x27;ve decided to merge &lt;em&gt;many&lt;&#x2F;em&gt; of the ancillary esp crates, such as &lt;code&gt;esp-wifi&lt;&#x2F;code&gt;, &lt;code&gt;esp-println&lt;&#x2F;code&gt; and &lt;code&gt;esp-backtrace&lt;&#x2F;code&gt; into the esp-hal repository itself. The aim of this is firstly, to simplify the release process, most of the crates and be upgraded in a single PR instead of multiple PRs spanning multiple repositories. Secondly, to allow crates to receive changes at the same time as their dependant crate(s) do, the main example being esp-wifi. There would usually be a gap where the latest esp-hal release wasn&#x27;t compatible with esp-wifi, which causes all kinds of confusion. Monorepos come with their challenges, but so far we&#x27;ve much preferred this development experience. During this time, we&#x27;ve also extracted the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;embassy-rs&#x2F;embassy&quot;&gt;embassy&lt;&#x2F;a&gt; related code into a new package &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;esp-hal&#x2F;tree&#x2F;main&#x2F;esp-hal-embassy&quot;&gt;esp-hal-embassy&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;For many esp-related crates, having one version of the documentation isn&#x27;t very useful. Much of the exposed APIs are dependent on the chip you are targeting. We&#x27;ve now started self-hosting some of our docs under &lt;a href=&quot;https:&#x2F;&#x2F;docs.esp-rs.org&#x2F;esp-hal&#x2F;&quot;&gt;docs.esp-rs.org&#x2F;esp-hal&#x2F;&lt;&#x2F;a&gt;, namely for esp-hal and esp-wifi, which allows you to view the docs for the specific chip.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;tooling&quot;&gt;Tooling&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;probe-rs&quot;&gt;probe-rs&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;probe-rs&#x2F;probe-rs&#x2F;releases&#x2F;tag&#x2F;v0.24.0&quot;&gt;v0.24.0&lt;&#x2F;a&gt; of probe-rs was released during Q2, and apart from a few bug fixes didn&#x27;t include many Espressif specific changes. One nice fix is that &lt;code&gt;probe-rs erase&lt;&#x2F;code&gt; now works on Espressif chips, see the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;probe-rs&#x2F;probe-rs&#x2F;pull&#x2F;2279&quot;&gt;PR for more details&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;espflash&quot;&gt;espflash&lt;&#x2F;h3&gt;
+&lt;p&gt;espflash saw the &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;esp-rs&#x2F;espflash&#x2F;releases&#x2F;tag&#x2F;v3.1.0&quot;&gt;v3.1.0&lt;&#x2F;a&gt; release which contained some additional configuration file features and a few bug fixes.&lt;&#x2F;p&gt;
+&lt;br&#x2F;&gt;
+&lt;hr &#x2F;&gt;
+&lt;br&#x2F;&gt;
+</description>
+        </item>
         <item>
             <title>Rust on Espressif chips - 12-04-2024</title>
             <pubDate>Fri, 12 Apr 2024 00:00:00 +0000</pubDate>
