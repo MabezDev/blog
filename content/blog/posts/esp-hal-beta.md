@@ -11,4 +11,4 @@ This one is a bit different! Instead of writing the post here, I have moved the 
 To read the esp-hal 1.0 beta announcement, [click here]!
 
 
-[click here]: https://developer.espressif.com/blog/rust-esp-hal-beta
+[click here]: https://developer.espressif.com/blog/2025/02/rust-esp-hal-beta/
