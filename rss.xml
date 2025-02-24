@@ -7,7 +7,16 @@
         <generator>Zola</generator>
         <language>en</language>
         <atom:link href="https://mabez.dev/rss.xml" rel="self" type="application/rss+xml"/>
-        <lastBuildDate>Fri, 21 Jun 2024 00:00:00 +0000</lastBuildDate>
+        <lastBuildDate>Mon, 24 Feb 2025 00:00:00 +0000</lastBuildDate>
+        <item>
+            <title>esp-hal 1.0.0 beta - 24-02-2025</title>
+            <pubDate>Mon, 24 Feb 2025 00:00:00 +0000</pubDate>
+            <link>https://mabez.dev/blog/posts/esp-hal-beta/</link>
+            <guid>https://mabez.dev/blog/posts/esp-hal-beta/</guid>
+            <description>&lt;p&gt;This one is a bit different! Instead of writing the post here, I have moved the new esp-rs related content to Espressif&#x27;s developer portal.&lt;&#x2F;p&gt;
+&lt;p&gt;To read the esp-hal 1.0 beta announcement, &lt;a href=&quot;https:&#x2F;&#x2F;developer.espressif.com&#x2F;blog&#x2F;2025&#x2F;02&#x2F;rust-esp-hal-beta&#x2F;&quot;&gt;click here&lt;&#x2F;a&gt;!&lt;&#x2F;p&gt;
+</description>
+        </item>
         <item>
             <title>Rust on Espressif chips - 21-06-2024</title>
             <pubDate>Fri, 21 Jun 2024 00:00:00 +0000</pubDate>

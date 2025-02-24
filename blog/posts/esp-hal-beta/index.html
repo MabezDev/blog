@@ -20,7 +20,7 @@
   />
   <link rel="stylesheet" href="https://mabez.dev/style.css"/>
   
-  <title>Rust on Espressif chips - 21-06-2024</title>
+  <title>esp-hal 1.0.0 beta - 24-02-2025</title>
   
 
   
@@ -101,37 +101,24 @@
 	<header class="post-header">
 	  <div class="post-meta">
 		
-		<span>Jun 21, 2024</span>
+		<span>Feb 24, 2025</span>
 		<small> - 
 <span class="reading-time" title="Estimated read time">
   
-  2 min read
+  1 min read
   
 </span>
 </small>
 		
             
 	  </div>
-	  <h1>Rust on Espressif chips - 21-06-2024</h1>
+	  <h1>esp-hal 1.0.0 beta - 24-02-2025</h1>
 	</header>
 
 	<div class="content">
         
-	  <p>This is the next quarterly update of the esp-rs effort, detailing the progress over Q2 2024.</p>
-<h2 id="xtensa-rust-compiler-llvm-xtensa">Xtensa Rust Compiler &amp; LLVM Xtensa</h2>
-<p>Quite a few patches have been merged upstream in LLVM regarding Xtensa support (see the <a href="https://github.com/espressif/llvm-project/issues/4">tracking issue</a> here), so much so that the latest LLVM main branch can emit Xtensa machine code and assembly! It's not quite enough to build projects with yet, and Rust is still using an older version of LLVM but we're making good progress towards soon being able to use a vanilla toolchain for ESP32, ESP32-S2 and ESP32-S3 projects.</p>
-<h2 id="esp-hal">esp-hal</h2>
-<p>esp-hal saw two releases, <a href="https://github.com/esp-rs/esp-hal/releases/tag/v0.17.0">v0.17.0</a> and <a href="https://github.com/esp-rs/esp-hal/releases/tag/v0.18.0">v0.18.0</a>. The biggest change across the new releases was the switch to run-time interrupt binding, instead of link-time interrupt binding. This means that interrupts are now allocated at runtime, which provides much more flexibility in how they are used. The driving force behind this change was to allow, blocking, interrupt-driven <em>and</em> async drivers to co-exist at the same time. We've spent much of our time since improving our current APIs, removing unnecessary generics, creating consistency between drivers and more. This included a complete overhaul of the GPIO module, to use <code>struct</code>'s to model pin behavior instead of type states. We took a similar approach for the timers too. We now have one timer driver for a given behavior, <code>PeriodicTimer</code>, <code>OneShotTimer</code> which can take in any kind of timer on each chip.</p>
-<p>Another big change is that we've decided to merge <em>many</em> of the ancillary esp crates, such as <code>esp-wifi</code>, <code>esp-println</code> and <code>esp-backtrace</code> into the esp-hal repository itself. The aim of this is firstly, to simplify the release process, most of the crates and be upgraded in a single PR instead of multiple PRs spanning multiple repositories. Secondly, to allow crates to receive changes at the same time as their dependant crate(s) do, the main example being esp-wifi. There would usually be a gap where the latest esp-hal release wasn't compatible with esp-wifi, which causes all kinds of confusion. Monorepos come with their challenges, but so far we've much preferred this development experience. During this time, we've also extracted the <a href="https://github.com/embassy-rs/embassy">embassy</a> related code into a new package <a href="https://github.com/esp-rs/esp-hal/tree/main/esp-hal-embassy">esp-hal-embassy</a>.</p>
-<p>For many esp-related crates, having one version of the documentation isn't very useful. Much of the exposed APIs are dependent on the chip you are targeting. We've now started self-hosting some of our docs under <a href="https://docs.esp-rs.org/esp-hal/">docs.esp-rs.org/esp-hal/</a>, namely for esp-hal and esp-wifi, which allows you to view the docs for the specific chip.</p>
-<h2 id="tooling">Tooling</h2>
-<h3 id="probe-rs">probe-rs</h3>
-<p><a href="https://github.com/probe-rs/probe-rs/releases/tag/v0.24.0">v0.24.0</a> of probe-rs was released during Q2, and apart from a few bug fixes didn't include many Espressif specific changes. One nice fix is that <code>probe-rs erase</code> now works on Espressif chips, see the <a href="https://github.com/probe-rs/probe-rs/pull/2279">PR for more details</a>.</p>
-<h3 id="espflash">espflash</h3>
-<p>espflash saw the <a href="https://github.com/esp-rs/espflash/releases/tag/v3.1.0">v3.1.0</a> release which contained some additional configuration file features and a few bug fixes.</p>
-<br/>
-<hr />
-<br/>
+	  <p>This one is a bit different! Instead of writing the post here, I have moved the new esp-rs related content to Espressif's developer portal.</p>
+<p>To read the esp-hal 1.0 beta announcement, <a href="https://developer.espressif.com/blog/2025/02/rust-esp-hal-beta/">click here</a>!</p>
 
 	</div>
 	<hr class="post-end">
@@ -152,9 +139,9 @@
 		
     </p>
     
-    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>573 Words</p>
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>46 Words</p>
     
-    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2024-06-21</p>
+    <p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>2025-02-24</p>
     
 	</footer>
   </article>

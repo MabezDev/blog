@@ -7,6 +7,10 @@
         <loc>https://mabez.dev/blog/posts/</loc>
     </url>
     <url>
+        <loc>https://mabez.dev/blog/posts/esp-hal-beta/</loc>
+        <lastmod>2025-02-24</lastmod>
+    </url>
+    <url>
         <loc>https://mabez.dev/blog/posts/esp-rust-04-04-2022/</loc>
         <lastmod>2022-04-04</lastmod>
     </url>
